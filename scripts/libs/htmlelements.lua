@@ -78,7 +78,7 @@ local function customRenderButton( g, button, style )
 
 	g.cursor.top = savedtop
 	g.cursor.left = savedleft
-	g.cursor.left = g.cursor.left + button.width + 2
+	g.cursor.left = g.cursor.left + button.width
 	g.gcairo:ClipReset()
 end	
 
@@ -91,7 +91,7 @@ local function renderbutton( g, style, text )
 	local brdr = 5
 	local textsize = style.textsize + brdr * 2
 	local w,h = g.gcairo:GetTextSize(text, textsize)
-	local button = g.gcairo:Button(text, g.cursor.left, g.cursor.top, w, textsize, 3, brdr, nil, nil)
+	local button = g.gcairo:Button(text, g.cursor.left, g.cursor.top, w, textsize, 2, brdr, nil, nil)
 	customRenderButton(g, button, style)	
 end 
 
