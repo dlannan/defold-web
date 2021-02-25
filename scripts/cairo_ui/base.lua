@@ -65,12 +65,12 @@ end
 ------------------------------------------------------------------------------------------------------------
 -- The files below are able to use the local namespace to work correctly with cairo_ui
 
-local operations 		= require("/scripts/cairo_ui/operations")
-local utext  			= require("/scripts/cairo_ui/text")
-local images			= require("/scripts/cairo_ui/images")
-local import_svg 		= require("/scripts/cairo_ui/import_svg")
-local widgets 			= require("/scripts/cairo_ui/widgets")
-local widget_handlers 	= require("/scripts/cairo_ui/widget_handlers")
+local operations 		= require("scripts/cairo_ui/operations")
+local utext  			= require("scripts/cairo_ui/text")
+local images			= require("scripts/cairo_ui/images")
+local import_svg 		= require("scripts/cairo_ui/import_svg")
+local widgets 			= require("scripts/cairo_ui/widgets")
+local widget_handlers 	= require("scripts/cairo_ui/widget_handlers")
 
 -- These objects are added to the global cairo_ui namespace
 AddLibrary(cairo_ui, operations)

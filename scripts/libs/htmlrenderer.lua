@@ -38,8 +38,9 @@ local function xmlhandler( gcairo, xml )
 	local label = nil
 	if( xml.label ) then label = string.lower(xml.label) end
 	if(label) then 
+		style.etype = label
 		local iselement = htmlelements[label]
-		if(iselement) then iselement.opened( g, style ) end
+		if(iselement) then iselement.opened( g, style, xml.xarg ) end
 		tinsert(stylestack, style)
 	end 
 

@@ -54,18 +54,27 @@ end
 
 ----------------------------------------------------------------------------------
 
-local function buttonopen( g, style )
+local function elementopen( g, style )
 
-	style.rtype		= "button"
-	style.border 	= { width = 2, height = 2 }
-	style.background = { color = "#aaaaaa" }
-	style.margin 	= { width = 2, height = 2 }
-	style.pos 		= { top = g.cursor.top, left = g.cursor.left }
-	
-	style.button 	= layout.addbuttonobject( g, style )
-	
+	local element = layout.addelement( g, style, attribs )
+	style.elementid = element.id
+end 
+
+----------------------------------------------------------------------------------
+
+local function elementclose( g, style )
+
+end 
+
+----------------------------------------------------------------------------------
+
+local function buttonopen( g, style, attribs )
+
+	local element = layout.addelement( g, style, attribs )
+	layout.addbuttonobject( g, style )
+
 	--g.cursor.left 	= g.cursor.left + style.border.width + style.margin.width
-	g.cursor.top 	= g.cursor.top + style.border.height + style.margin.height
+	g.cursor.top 	= g.cursor.top + element.border.height + element.margin.height
 end 
 
 ----------------------------------------------------------------------------------
@@ -73,13 +82,15 @@ end
 local function buttonclose( g, style )
 
 	-- Push the size of the element into the button object
-	style.button.width 		= g.cursor.left - style.pos.left  + style.border.width * 2 + style.margin.width * 2
-	style.button.height 	= g.cursor.top - style.pos.top + style.textsize + style.border.height + style.margin.height
+	local element = layout.getelement(style.elementid)
+	element.width 		= g.cursor.left - element.pos.left  + element.border.width * 2 + element.margin.width * 2
+	element.height 		= g.cursor.top - element.pos.top + style.textsize + element.border.height + element.margin.height
 	--print(style.width, style.height)
-	
+	layout.updateelement( style.elementid, element )
+
 	-- Restore height, not width
-	g.cursor.left 	= g.cursor.left + style.border.width * 2 + style.margin.width * 2
-	g.cursor.top = g.cursor.top - style.border.height - style.margin.height	
+	g.cursor.left 	= g.cursor.left + element.border.width * 2 + element.margin.width * 2
+	g.cursor.top = g.cursor.top - element.border.height - element.margin.height	
 end
 
 ----------------------------------------------------------------------------------
