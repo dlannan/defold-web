@@ -33,79 +33,70 @@ local TEXT_CONST = {
 ----------------------------------------------------------------------------------
 
 local htmlelements = {}
+local layout = require("scripts.libs.htmllayout")
 
 ----------------------------------------------------------------------------------
 
-local function rendertext( g, style, text )
-
-	if(type(text) ~= "string") then return end 
-	g.gcairo:FontSetFace(style.fontface, style.fontstyle, style.fontweight)	
-	local w,h = g.gcairo:GetTextSize(text, style.textsize)
-	g.gcairo:RenderText( text, g.cursor.left, g.cursor.top + style.linesize * 0.5, style.textsize, tcolor )
-	g.cursor.left = g.cursor.left + w
-end 
-
-----------------------------------------------------------------------------------
-
-local function rendernone( g, style, text )
-
-end 
-
-----------------------------------------------------------------------------------
-
-local function customRenderButton( g, button, style )
-
-	g.gcairo:RenderBox( button.left, button.top, button.width, button.height, button.corner )
-	g.gcairo:ClipRegion(button.left+button.border, button.top+button.border, button.width-button.border, button.height-button.border)
-	local bs = button.height 
-	if(bs > button.width) then bs = button.width end
-
-	cr.cairo_save(g.gcairo.ctx)
-	cr.cairo_translate(g.gcairo.ctx, button.left, button.top)
-
-	local brdr = button.border * 2.0
-	local txthgt = bs - brdr
-
-	local savedleft = g.cursor.left
+local function textdefault( g, style, text )
+	local w,h = g.gcairo:GetTextSize(text, style.textsize, style)	
 	local savedtop = g.cursor.top
-	g.cursor.left = brdr
-	g.cursor.top = (txthgt * 0.5)
-
-	style.fontheight = txthgt 
-	
-	rendertext( g, style, button.name )
-	cr.cairo_restore(g.gcairo.ctx)
-
+	g.cursor.top = g.cursor.top + style.linesize * 0.5
+	layout.addtextobject( g, style, text )
+	g.cursor.left = g.cursor.left + w
 	g.cursor.top = savedtop
-	g.cursor.left = savedleft
-	g.cursor.left = g.cursor.left + button.width
-	g.gcairo:ClipReset()
-end	
-
-local function renderbutton( g, style, text )
-
-	if(type(text) ~= "string") then return end 
-	if(#text <= 0) then return end
-
-	-- TODO: Bit messy.. make this nicer.
-	local brdr = 5
-	local textsize = style.textsize + brdr * 2
-	local w,h = g.gcairo:GetTextSize(text, textsize)
-	local button = g.gcairo:Button(text, g.cursor.left, g.cursor.top, w, textsize, 2, brdr, nil, nil)
-	customRenderButton(g, button, style)	
 end 
+
+----------------------------------------------------------------------------------
+
+local function textnone( g, style, text )
+
+end 
+
+----------------------------------------------------------------------------------
+
+local function buttonopen( g, style )
+
+	style.rtype		= "button"
+	style.border 	= { width = 2, height = 2 }
+	style.background = { color = "#aaaaaa" }
+	style.margin 	= { width = 2, height = 2 }
+	style.pos 		= { top = g.cursor.top, left = g.cursor.left }
+	
+	style.button 	= layout.addbuttonobject( g, style )
+	
+	--g.cursor.left 	= g.cursor.left + style.border.width + style.margin.width
+	g.cursor.top 	= g.cursor.top + style.border.height + style.margin.height
+end 
+
+----------------------------------------------------------------------------------
+
+local function buttonclose( g, style )
+
+	-- Push the size of the element into the button object
+	style.button.width 		= g.cursor.left - style.pos.left  + style.border.width * 2 + style.margin.width * 2
+	style.button.height 	= g.cursor.top - style.pos.top + style.textsize + style.border.height + style.margin.height
+	--print(style.width, style.height)
+	
+	-- Restore height, not width
+	g.cursor.left 	= g.cursor.left + style.border.width * 2 + style.margin.width * 2
+	g.cursor.top = g.cursor.top - style.border.height - style.margin.height	
+end
 
 ----------------------------------------------------------------------------------
 
 local function defaultclose( g, style )
 	
 	g.cursor.top = g.cursor.top + style.linesize
-	g.cursor.left = g.layout.left
+	g.cursor.left = g.frame.left
 end	
 
 local function closenone( g, style )
 
 end	
+
+----------------------------------------------------------------------------------
+
+
 
 ----------------------------------------------------------------------------------
 -- Heading elements 
@@ -116,7 +107,6 @@ htmlelements["h1"]  = {
 		style.textsize = FONT_SIZES.H1
 		style.linesize = style.textsize * 1.5
 	end,
-	render 		= rendertext,
 	closed 		= defaultclose,
 }
 
@@ -125,7 +115,6 @@ htmlelements["h2"]  = {
 		style.textsize = FONT_SIZES.H2
 		style.linesize = style.textsize * 1.5
 	end,
-	render 		= rendertext,
 	closed 		= defaultclose,
 }
 
@@ -134,7 +123,6 @@ htmlelements["h3"]  = {
 		style.textsize = FONT_SIZES.H3
 		style.linesize = style.textsize * 1.5
 	end,
-	render 		= rendertext,
 	closed 		= defaultclose,
 }
 
@@ -143,7 +131,6 @@ htmlelements["h4"]  = {
 		style.textsize = FONT_SIZES.H4
 		style.linesize = style.textsize * 1.5
 	end,
-	render 		= rendertext,
 	closed 		= defaultclose,
 }
 
@@ -152,7 +139,6 @@ htmlelements["h5"]  = {
 		style.textsize = FONT_SIZES.H5
 		style.linesize = style.textsize * 1.5
 	end,
-	render 		= rendertext,
 	closed 		= defaultclose,
 }
 
@@ -161,7 +147,6 @@ htmlelements["h6"]  = {
 		style.textsize = FONT_SIZES.H6
 		style.linesize = style.textsize * 1.5
 	end,
-	render 		= rendertext,
 	closed 		= defaultclose,
 }
 
@@ -173,12 +158,11 @@ htmlelements["p"]  = {
 		style.linesize = style.textsize * 1.5
 		style.paragraph = true
 		g.cursor.top = g.cursor.top + FONT_SIZES.P * 0.5
-		g.cursor.left = g.layout.left
+		g.cursor.left = g.frame.left
 	end,
-	render 		= rendertext,
 	closed 		= function( g, style )
 		g.cursor.top = g.cursor.top + FONT_SIZES.P * 1.5
-		g.cursor.left = g.layout.left
+		g.cursor.left = g.frame.left
 	end,
 }
 
@@ -188,7 +172,6 @@ htmlelements["i"]  = {
 	opened 		= function( g, style )
 		style.fontstyle = 1
 	end,
-	render 		= rendertext,
 	closed 		= function( g, style )	
 		style.fontstyle = nil
 	end,
@@ -198,7 +181,6 @@ htmlelements["b"]  = {
 	opened 		= function( g, style )
 		style.fontweight = 1
 	end,
-	render 		= rendertext,
 	closed 		= function( g, style )	
 		style.fontweight = nil
 	end,
@@ -209,10 +191,9 @@ htmlelements["b"]  = {
 htmlelements["br"]  = {
 	opened 		= function( g, style )
 		style.linesize = style.textsize
-		g.cursor.left = g.layout.left
+		g.cursor.left = g.frame.left
 		--g.cursor.top = g.cursor.top + style.linesize
 	end,
-	render 		= rendernone,
 	closed 		= defaultclose,
 }
 
@@ -223,7 +204,6 @@ htmlelements["blockquote"] = {
 		g.cursor.left = g.cursor.left + TEXT_CONST.TAB
 		--g.cursor.top = g.cursor.top + style.linesize
 	end,
-	render 		= rendertext,
 	closed 		= defaultclose,
 }
 
@@ -231,18 +211,19 @@ htmlelements["blockquote"] = {
 ----------------------------------------------------------------------------------
 
 htmlelements["button"] = {
-	opened 		= function( g, style )
-		--g.cursor.top = g.cursor.top + style.linesize * 0.5
-	end,
-	render 		= renderbutton,
-	closed 		= closenone,
+	opened 		= buttonopen,
+	closed 		= buttonclose,
 }
 
 ----------------------------------------------------------------------------------
 
 return {
 	FONT_SIZES 	= FONT_SIZES,
-	elements 	= htmlelements, 
+
+	addtextobject 	= textdefault,
+	elements 		= htmlelements, 
+	init			= layout.init,
+	finish			= layout.finish,
 }
 
 ----------------------------------------------------------------------------------

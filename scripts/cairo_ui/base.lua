@@ -553,16 +553,7 @@ function cairo_ui:RenderBox(x, y, width, height, corner, bgcolor, bdrcolor)
     cr.cairo_restore (self.ctx)
 end
 
-------------------------------------------------------------------------------------------------------------
-
-function cairo_ui:FontSetFace( fontname, slant, strength )
-	if(fontname == nil) then fontname = self.style.font_name end 
-	if(slant == nil) then slant = cr.CAIRO_FONT_SLANT_NORMAL end 
-	if(strength == nil) then strength = 0 end 
-	cr.cairo_select_font_face( self.ctx, fontname, slant, strength); CAIRO_CHK(self.ctx)
-end
-
-------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 
 return cairo_ui
 

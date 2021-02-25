@@ -15,7 +15,7 @@ local FONT_SIZES 	= htmle.FONT_SIZES
 ----------------------------------------------------------------------------------
 
 local cursor = { top = 0.0, left = 0.0 }
-local layout = { top = 0.0, left = 0.0 }
+local frame = { top = 0.0, left = 0.0 }
 
 ----------------------------------------------------------------------------------
 
@@ -30,7 +30,9 @@ local function xmlhandler( gcairo, xml )
 
 	local currstyle = stylestack[#stylestack]
 	local style = deepcopy(currstyle)
-	local g = { gcairo=gcairo, cursor = cursor, layout = layout }
+	-- Copydown buttons and unqiue text objects
+	style.button = currstyle.button
+	local g = { gcairo=gcairo, cursor = cursor, frame = frame }
 
 	-- Check element names 
 	local label = nil
@@ -47,9 +49,7 @@ local function xmlhandler( gcairo, xml )
 		if(type(k) == "number") then
 			if( type(v) == "string") then
 				if(string.find(v, "DOCTYPE") == nil) then
-					
-					local iselement = htmlelements[label]
-					if(iselement) then iselement.render( g, style, v ) end 
+					htmle.addtextobject( g, style, v )
 				end
 			end
 
@@ -70,11 +70,15 @@ end
 ----------------------------------------------------------------------------------
 local function renderxml( gcairo, xmldoc, position )
 
-	layout.top 	= position.top or 0.0
-	layout.left = position.left or 0.0
-	cursor.top 	= layout.top
-	cursor.left = layout.left
+	frame.top 	= position.top or 0.0
+	frame.left = position.left or 0.0
+	cursor.top 	= frame.top
+	cursor.left = frame.left
+
+	htmle.init()
 	xmlhandler( gcairo, xmldoc )
+	htmle.finish()
+	
 	gcairo:FontSetFace(nil,nil,nil)	
 end
 
