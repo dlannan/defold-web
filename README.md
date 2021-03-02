@@ -1,4 +1,6 @@
 # Web UI for Defold
+
+Note: This is for applications only (at the moment). Web deployment may be possible - to be investigated.
 This is derived from the defold-cairo project Im working on.
 
 The aim is to provide a cairo web styled interface for easy UI development and integration with my OpenGLES rendering setup.
