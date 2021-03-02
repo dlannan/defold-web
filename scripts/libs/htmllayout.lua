@@ -71,12 +71,21 @@ local function renderbutton( g, v )
 
 	local text 		= v.text
 	local style 	= v.style
-	
 	local ele = getelement( v.eid )
-	local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 6 )
+	local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
 	g.gcairo:RenderButton(button, 0)
 	if(text) then rendertext( g, v ) end 
 end 
+
+----------------------------------------------------------------------------------
+local bgcolor	= { r=1, g=1, b=1, a=0 }
+local brdrcolor = { r=0, g=0, b=0, a=1 }
+
+local function renderelement( g, v) 
+
+	local ele = getelement( v.eid )
+	g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
+end	
 
 ----------------------------------------------------------------------------------
 
@@ -90,6 +99,12 @@ local function dolayout( )
 		else 
 			rendertext(g, v)
 		end
+	end
+	for k, v in ipairs( render ) do 
+
+		local g = { gcairo = v.gcairo, cursor=v.cursor, frame = v.frame }
+		-- Render a box around all elements 
+		renderelement( g, v)
 	end 
 end
 
@@ -125,10 +140,10 @@ local function addelement( g, style, attribs )
 	element.etype 		= style.etype
 	element.border 		= { width = 2, height = 2 }
 	element.background 	= { color = style.background or "#aaaaaa" }
-	element.margin 		= { width = 2, height = 2 }
+	element.margin 		= { top = style.margin.top or 0, bottom = style.margin.bottom or 0, left = style.margin.left or 0, right = style.margin.right or 0 }
 	element.pos 		= { top = g.cursor.top, left = g.cursor.left }
-	element.width 		= attribs.width or 200
-	element.height 		= attribs.height or 150
+	element.width 		= attribs.width or 0
+	element.height 		= attribs.height or 0
 	element.id 			= #elements + 1
 
 	style.elementid 	= element.id

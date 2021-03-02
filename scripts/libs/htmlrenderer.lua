@@ -20,7 +20,7 @@ local frame = { top = 0.0, left = 0.0 }
 ----------------------------------------------------------------------------------
 
 local stylestack = {}
-stylestack[1] = { textsize = FONT_SIZES.P, linesize = FONT_SIZES.P * 1.5 }
+stylestack[1] = { textsize = FONT_SIZES.P, linesize = FONT_SIZES.P * 1.5, maxlinesize = 0 }
 
 ----------------------------------------------------------------------------------
 local function xmlhandler( gcairo, xml )
@@ -30,8 +30,8 @@ local function xmlhandler( gcairo, xml )
 
 	local currstyle = stylestack[#stylestack]
 	local style = deepcopy(currstyle)
-	-- Copydown buttons and unqiue text objects
-	style.button = currstyle.button
+
+	if(style.margin == nil) then style.margin = htmle.defaultmargin(style) end
 	local g = { gcairo=gcairo, cursor = cursor, frame = frame }
 
 	-- Check element names 
@@ -39,8 +39,13 @@ local function xmlhandler( gcairo, xml )
 	if( xml.label ) then label = string.lower(xml.label) end
 	if(label) then 
 		style.etype = label
-		local iselement = htmlelements[label]
-		if(iselement) then iselement.opened( g, style, xml.xarg ) end
+		local iselement = htmlelements[label]	
+		if(iselement) then 
+			-- Assign parent
+			style.pstyle = currstyle
+
+			iselement.opened( g, style, xml.xarg ) 
+		end
 		tinsert(stylestack, style)
 	end 
 

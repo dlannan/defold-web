@@ -36,8 +36,7 @@ function widgets:ButtonText(name, text, x, y, fsize, tcolor, cb, meta)
     self:RenderText(text, x, y, fsize, tcolor)
 end
 
-
-------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 
 function widgets:RenderCursor(name, x, y, width, height, tfade, cb)
 	
