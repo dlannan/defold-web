@@ -4,6 +4,7 @@ local tinsert 	= table.insert
 local tremove 	= table.remove
 
 require("scripts.utils.copy")
+local GM 		= require("scripts.libs.htmlgeom")
 
 ----------------------------------------------------------------------------------
 -- A html render tree  -- created during first pass
@@ -14,6 +15,8 @@ local layout 		= {}
 -- A mapping of elements - using id's. This allows for referential structuring so we can 
 --   easily replicate operations on a dom using it.
 local elements		= {}
+
+local geom 			= nil
 
 local tcolor = { r=0.0, b=1.0, g=0.0, a=1.0 }
 
@@ -120,6 +123,9 @@ local function init()
 	render 		= {}
 	layout 		= {}
 	elements 	= {}
+
+	-- Gen new geom layout every frame?!! (for now - this will be cached later)
+	geom 		= GM.create()
 end 
 
 local function finish() 
@@ -146,6 +152,8 @@ local function addelement( g, style, attribs )
 	element.height 		= attribs.height or 0
 	element.id 			= #elements + 1
 
+	element.geom 		= geom.add( style.etype, style.pstyle.geom, element.pos.left, element.pos.top, element.width, element.height )
+
 	style.elementid 	= element.id
 	tinsert(elements, element)
 	return element
@@ -169,7 +177,9 @@ local function addtextobject( g, style, text )
 		cursor 	= { top = g.cursor.top, left = g.cursor.left },
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
-	
+
+	renderobj.geom 		= geom.add( style.etype, style.pstyle.geom, g.cursor.left, g.cursor.top )
+		
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
 end 
@@ -192,6 +202,8 @@ local function addbuttonobject( g, style )
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 
+	renderobj.geom 		= geom.add( style.etype, style.pstyle.geom, g.cursor.left, g.cursor.top )
+	
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
 	return renderobj

@@ -1,3 +1,5 @@
+-- Derived from the XML parser here: http://lua-users.org/wiki/LuaXml
+
 local function parseargs(s)
   local arg = {}
   string.gsub(s, "([%-%w:_]+)=([\"'])(.-)%2", function (w, _, a)

@@ -6,7 +6,7 @@ require("scripts.utils.copy")
 local tinsert 	= table.insert
 local tremove 	= table.remove
 
-local tcolor = { r=0.0, b=1.0, g=0.0, a=1.0 }
+local tcolor 	= { r=0.0, b=1.0, g=0.0, a=1.0 }
 
 local htmle = require("scripts.libs.htmlelements")
 local htmlelements 	= htmle.elements 
@@ -24,9 +24,6 @@ stylestack[1] = { textsize = FONT_SIZES.P, linesize = FONT_SIZES.P * 1.5, maxlin
 
 ----------------------------------------------------------------------------------
 local function xmlhandler( gcairo, xml )
-
-	-- Skip a head tag  TODO: This needs to be a bit smarter
-	if(xml.label == "head") then return end
 
 	local currstyle = stylestack[#stylestack]
 	local style = deepcopy(currstyle)
