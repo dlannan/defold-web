@@ -29,20 +29,6 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-local function checkgeomchanges(pg, g )
-
-	local tgeom = { left = 0, top = 0, width = 0, height = 0, right = 0, bottom = 0 }
-	-- Only check first level children (we assume they are done, or will be done later)
-	for k,v in ipairs(pg.childs) do 
-		tgeom  = mergegeom( geometries[v], tgeom )
-	end 
-	tgeom  = mergegeom( g, tgeom )
-	updategeom( pg, tgeom )
-	return pg
-end 
-
------------------------------------------------------------------------------------------------------------------------------------
-
 local geommanager = {}
 
 geommanager.create 	= function( )
@@ -54,16 +40,29 @@ geommanager.create 	= function( )
 	geom.geometries 		= {}
 	geom.geomid 			= 0
 
+	geom.checkgeomchanges = function(pg, g )
+
+		local tgeom = { left = 0, top = 0, width = 0, height = 0, right = 0, bottom = 0 }
+		-- Only check first level children (we assume they are done, or will be done later)
+		for k,v in ipairs(pg.childs) do 
+			tgeom  = mergegeom( geom.geometries[v], tgeom )
+		end 
+		tgeom  = mergegeom( g, tgeom )
+		updategeom( pg, tgeom )
+		return pg
+	end 
+	
+	
 	geom.traverseup = function ( geomid, g ) 
 
 		if( g.pid ) then 
-			local pg = geometries[g.pid] or nil 
+			local pg = geom.geometries[g.pid] or nil 
 			if(pg == nil) then return end 
 
 			-- Update parent if bounds of the child geom impact it
-			pg = checkgeomchanges( pg, g )
+			pg = geom.checkgeomchanges( pg, g )
 			-- Write this back before more traversal 
-			geometries[g.pid] = pg 
+			geom.geometries[g.pid] = pg 
 
 			geom.traverseup(g.pid, pg)
 		end 
@@ -101,8 +100,8 @@ geommanager.create 	= function( )
 			end
 		end 
 	
-		geom.geometries[geom.geomid] = newgeom 
-		return geom.geomid
+		geom.geometries[newgeom.gid] = newgeom 
+		return newgeom.gid
 	end
 
 	geom.remove 	= function( gid )

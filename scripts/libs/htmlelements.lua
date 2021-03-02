@@ -75,9 +75,14 @@ local function textdefault( g, style, text )
 	local savedtop = g.cursor.top
 	local savedleft = g.cursor.left
 
+	local geom = layout.getgeom()
+	local element = layout.getelement(style.elementid)
+	geom.resize( element.gid, g.cursor.left, g.cursor.top, w, h )
+
 	local middle = style.linesize * 0.35
 	g.cursor.top = g.cursor.top + middle
 	g.cursor.left = g.cursor.left + style.margin.left
+
 	if(style.margin == nil) then print(style.etype) end
 	layout.addtextobject( g, style, text )
 	

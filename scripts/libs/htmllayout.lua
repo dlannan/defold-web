@@ -47,6 +47,13 @@ function table_print(tt, indent, done)
 end
 
 ----------------------------------------------------------------------------------
+
+local function getgeometry( )
+
+	return geom
+end 
+
+----------------------------------------------------------------------------------
 local function getelement(eid)
 
 	return elements[eid] or nil
@@ -87,7 +94,9 @@ local brdrcolor = { r=0, g=0, b=0, a=1 }
 local function renderelement( g, v) 
 
 	local ele = getelement( v.eid )
-	g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
+	-- g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
+	local tg = geom.geometries[ele.gid]
+	g.gcairo:RenderBox( tg.left, tg.top, tg.width, tg.height, 0, bgcolor, brdrcolor )
 end	
 
 ----------------------------------------------------------------------------------
@@ -152,7 +161,15 @@ local function addelement( g, style, attribs )
 	element.height 		= attribs.height or 0
 	element.id 			= #elements + 1
 
-	element.geom 		= geom.add( style.etype, style.pstyle.geom, element.pos.left, element.pos.top, element.width, element.height )
+	local pid = nil 
+	if(style.pstyle.elementid) then 
+		local eid 			= elements[style.pstyle.elementid]
+		if(eid) then 
+			local pelement 		= geom[eid.gid]
+			pid = pelement.gid or nil
+		end
+	end
+	element.gid 		= geom.add( style.etype, pid, element.pos.left, element.pos.top, element.width, element.height )
 
 	style.elementid 	= element.id
 	tinsert(elements, element)
@@ -178,7 +195,7 @@ local function addtextobject( g, style, text )
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 
-	renderobj.geom 		= geom.add( style.etype, style.pstyle.geom, g.cursor.left, g.cursor.top )
+	renderobj.gid 		= geom.add( style.etype, style.pstyle.geom, g.cursor.left, g.cursor.top )
 		
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
@@ -202,7 +219,7 @@ local function addbuttonobject( g, style )
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 
-	renderobj.geom 		= geom.add( style.etype, style.pstyle.geom, g.cursor.left, g.cursor.top )
+	renderobj.gid 		= geom.add( style.etype, style.pstyle.geom, g.cursor.left, g.cursor.top )
 	
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
@@ -231,7 +248,9 @@ return {
 	addtextobject 	= addtextobject,
 	addbuttonobject	= addbuttonobject,
 	
-	addlayout 	= addlayout,
+	addlayout 		= addlayout,
+
+	getgeom 		= getgeometry,
 }
 
 ----------------------------------------------------------------------------------
