@@ -75,10 +75,10 @@ end
 ----------------------------------------------------------------------------------
 local function renderxml( gcairo, xmldoc, position )
 
-	frame.top 	= position.top or 0.0
-	frame.left = position.left or 0.0
-	cursor.top 	= frame.top
-	cursor.left = frame.left
+	frame.top 		= position.top or 0.0
+	frame.left 		= position.left or 0.0
+	cursor.top 		= frame.top
+	cursor.left 	= frame.left
 
 	htmle.init(frame, cursor)
 	xmlhandler( gcairo, xmldoc )
