@@ -71,13 +71,9 @@ end
 ----------------------------------------------------------------------------------
 
 local function textdefault( g, style, text )
-	local w,h = g.gcairo:GetTextSize(text, style.textsize, style)	
-	local savedtop = g.cursor.top
-	local savedleft = g.cursor.left
 
-	local geom = layout.getgeom()
-	local element = layout.getelement(style.elementid)
-	geom.resize( element.gid, g.cursor.left, g.cursor.top, w, h )
+	local savedtop = g.cursor.top
+	local w,h = g.gcairo:GetTextSize(text, style.textsize, style)	
 
 	local middle = style.linesize * 0.35
 	g.cursor.top = g.cursor.top + middle
@@ -86,9 +82,10 @@ local function textdefault( g, style, text )
 	if(style.margin == nil) then print(style.etype) end
 	layout.addtextobject( g, style, text )
 	
-	style.width = w 
-	style.height = h
-	g.cursor.top = savedtop
+	style.width 	= w 
+	style.height 	= h	
+	g.cursor.top 	= savedtop -- dont play with the "top" position this is the linebase position for text
+	g.cursor.left 	= g.cursor.left + w + style.margin.right
 end 
 
 ----------------------------------------------------------------------------------
@@ -112,8 +109,14 @@ local function elementclose( g, style )
 	local element = layout.getelement(style.elementid)
  	element.width 		= style.width or 0
  	element.height 		= style.height or 0
-	g.cursor.left = g.cursor.left + element.width
-	layout.updateelement( style.elementid, element )
+	g.cursor.left 		= g.cursor.left + element.width
+	--layout.updateelement( style.elementid, element )
+	-- if(style.etype == "body") then print(style.etype, element.pos.left, element.pos.top, element.width, element.height) end	
+	
+	local geom = layout.getgeom()
+	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )	
+
+	g.cursor.left 	= geom[ element.gid ].right
 end 
 
 ----------------------------------------------------------------------------------
@@ -142,10 +145,13 @@ local function buttonclose( g, style )
 	local element = layout.getelement(style.elementid)
 	element.width 		= style.width + element.margin.right  + element.margin.left
 	element.height 		= style.height + element.border.width * 2 + element.margin.top + element.margin.bottom
-	layout.updateelement( style.elementid, element )
+	--layout.updateelement( style.elementid, element )
 
-	g.cursor.left 	= element.pos.left + element.width
-	g.cursor.top 	= element.pos.top
+	local geom = layout.getgeom()
+	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
+		
+	g.cursor.left 	= geom[ element.gid ].right
+	g.cursor.top 	= geom[ element.gid ].top
 	-- Buttons do not modify the top cursor
 	if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
 end
@@ -297,6 +303,16 @@ htmlelements["body"] = {
 htmlelements["html"] = {
 	opened 		= elementopen,
 	closed 		= defaultclose,
+}
+
+----------------------------------------------------------------------------------
+
+htmlelements["head"] = {
+	opened 		= function(g, style, attribs)
+		-- Dont process head element normally
+		style.dontprocess = true
+		end,
+	closed 		= function() end ,
 }
 
 ----------------------------------------------------------------------------------

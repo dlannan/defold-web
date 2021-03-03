@@ -46,21 +46,23 @@ local function xmlhandler( gcairo, xml )
 		tinsert(stylestack, style)
 	end 
 
-	for k,v in pairs(xml) do 
+	if(style.dontprocess == nil) then 
+		for k,v in pairs(xml) do 
 
-		-- Might be a string index
-		if(type(k) == "number") then
-			if( type(v) == "string") then
-				if(string.find(v, "DOCTYPE") == nil) then
-					htmle.addtextobject( g, style, v )
+			-- Might be a string index
+			if(type(k) == "number") then
+				if( type(v) == "string") then
+					if(string.find(v, "DOCTYPE") == nil) then
+						htmle.addtextobject( g, style, v )
+					end
+				end
+
+				if(type(v) == "table") then
+					xmlhandler( gcairo, v ) 
 				end
 			end
-
-			if(type(v) == "table") then
-				xmlhandler( gcairo, v ) 
-			end
 		end
-	end
+	end 
 
 	-- Check label to close the element
 	if(label) then 
@@ -78,7 +80,7 @@ local function renderxml( gcairo, xmldoc, position )
 	cursor.top 	= frame.top
 	cursor.left = frame.left
 
-	htmle.init()
+	htmle.init(frame, cursor)
 	xmlhandler( gcairo, xmldoc )
 	htmle.finish()
 	

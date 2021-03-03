@@ -31,7 +31,7 @@ end
 
 local geommanager = {}
 
-geommanager.create 	= function( )
+geommanager.create 	= function( frame, cursor )
 
 	-- The geom object you will work with
 	local geom 				= {}
@@ -40,9 +40,12 @@ geommanager.create 	= function( )
 	geom.geometries 		= {}
 	geom.geomid 			= 0
 
+	geom.frame 				= frame 
+	geom.cursor 			= cursor
+
 	geom.checkgeomchanges = function(pg, g )
 
-		local tgeom = { left = 0, top = 0, width = 0, height = 0, right = 0, bottom = 0 }
+		local tgeom = { left = geom.frame.left, top = geom.frame.top, width = 0, height = 0, right = 0, bottom = 0 }
 		-- Only check first level children (we assume they are done, or will be done later)
 		for k,v in ipairs(pg.childs) do 
 			tgeom  = mergegeom( geom.geometries[v], tgeom )
@@ -75,8 +78,8 @@ geommanager.create 	= function( )
 		geom.geomid 	= geom.geomid + 1
 		if(name == nil) then name = "geom_"..geom.geomid end
 
-		left 	= left or 0
-		top 	= top or 0
+		left 	= left or geom.frame.left
+		top 	= top or geom.frame.top
 		width 	= width or 0
 		height 	= height or 0
 
@@ -123,7 +126,7 @@ geommanager.create 	= function( )
 	
 	-- Setting any of the params to nil will use current values
 	-- A nil geomid will fail
-	geom.resize 	= function( geomid, left, top, width, height )
+	geom.renew 		= function( geomid, left, top, width, height )
 
 		if(geomid == nil) then return nil end -- silent fail check returns!
 		local g = geom.geometries[geomid] or nil 

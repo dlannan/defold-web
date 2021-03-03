@@ -128,13 +128,13 @@ end
 
 ----------------------------------------------------------------------------------
 
-local function init() 
+local function init(frame, cursor) 
 	render 		= {}
 	layout 		= {}
 	elements 	= {}
 
 	-- Gen new geom layout every frame?!! (for now - this will be cached later)
-	geom 		= GM.create()
+	geom 		= GM.create(frame, cursor)
 end 
 
 local function finish() 
@@ -195,7 +195,15 @@ local function addtextobject( g, style, text )
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 
-	renderobj.gid 		= geom.add( style.etype, style.pstyle.geom, g.cursor.left, g.cursor.top )
+	local pid = nil 
+	if(style.pstyle.elementid) then 
+		local eid 			= elements[style.pstyle.elementid]
+		if(eid) then 
+			local pelement 		= geom[eid.gid]
+			pid = pelement.gid or nil
+		end
+	end	
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top )
 		
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
@@ -219,7 +227,15 @@ local function addbuttonobject( g, style )
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 
-	renderobj.gid 		= geom.add( style.etype, style.pstyle.geom, g.cursor.left, g.cursor.top )
+	local pid = nil 
+	if(style.pstyle.elementid) then 
+		local eid 			= elements[style.pstyle.elementid]
+		if(eid) then 
+			local pelement 		= geom[eid.gid]
+			pid = pelement.gid or nil
+		end
+	end
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top )
 	
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
