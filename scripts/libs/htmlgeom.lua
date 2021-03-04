@@ -4,6 +4,8 @@
 local tinsert 		= table.insert 
 local tremove 		= table.remove 
 
+local MAX_WIDTH 	= 999999
+local MAX_HEIGHT 	= 999999
 -----------------------------------------------------------------------------------------------------------------------------------
 
 local function updategeom( pg, tg )
@@ -20,11 +22,12 @@ end
 
 local function mergegeom( g, tg )
 
-	if( g.left < tg.left) then tg.left = g.left end 
-	if( g.top < tg.top) then tg.top = g.top end
 	if( g.left + g.width > tg.left + tg.width ) then tg.width = g.left + g.width - tg.left end  
 	if( g.top + g.height > tg.top + tg.height ) then tg.height = g.top + g.height - tg.top end  
-	return tg
+	if( g.left < tg.left) then tg.left = g.left end 
+	if( g.top < tg.top) then tg.top = g.top end
+	tg.right = tg.left + tg.width 
+	tg.bottom = tg.top + tg.height
 end 
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -45,14 +48,13 @@ geommanager.create 	= function( frame, cursor )
 
 	geom.checkgeomchanges = function(pg, g )
 
-		local tgeom = { left = geom.frame.left, top = geom.frame.top, width = 0, height = 0, right = 0, bottom = 0 }
+		local tgeom = { left = MAX_WIDTH, top = MAX_HEIGHT, width = 0, height = 0, right = 0, bottom = 0 }
 		-- Only check first level children (we assume they are done, or will be done later)
 		for k,v in ipairs(pg.childs) do 
-			tgeom  = mergegeom( geom.geometries[v], tgeom )
+			mergegeom( geom.geometries[v], tgeom )
 		end 
-		tgeom  = mergegeom( g, tgeom )
+		mergegeom( g, tgeom )
 		updategeom( pg, tgeom )
-		return pg
 	end 
 	
 	
@@ -63,10 +65,7 @@ geommanager.create 	= function( frame, cursor )
 			if(pg == nil) then return end 
 
 			-- Update parent if bounds of the child geom impact it
-			pg = geom.checkgeomchanges( pg, g )
-			-- Write this back before more traversal 
-			geom.geometries[g.pid] = pg 
-
+			geom.checkgeomchanges( pg, g )
 			geom.traverseup(g.pid, pg)
 		end 
 	end 
@@ -103,7 +102,7 @@ geommanager.create 	= function( frame, cursor )
 			end
 		end 
 	
-		geom.geometries[newgeom.gid] = newgeom 
+		geom.geometries[newgeom.gid] = newgeom 	
 		return newgeom.gid
 	end
 

@@ -157,8 +157,8 @@ local function addelement( g, style, attribs )
 	element.background 	= { color = style.background or "#aaaaaa" }
 	element.margin 		= { top = style.margin.top or 0, bottom = style.margin.bottom or 0, left = style.margin.left or 0, right = style.margin.right or 0 }
 	element.pos 		= { top = g.cursor.top, left = g.cursor.left }
-	element.width 		= attribs.width or 0
-	element.height 		= attribs.height or 0
+	element.width 		= attribs.width or style.width or 0
+	element.height 		= attribs.height or style.height or 0
 	element.id 			= #elements + 1
 
 	local pid = nil 
@@ -170,7 +170,8 @@ local function addelement( g, style, attribs )
 		end
 	end
 	element.gid 		= geom.add( style.etype, pid, element.pos.left, element.pos.top, element.width, element.height )
-
+	geom.update( element.gid )
+	
 	style.elementid 	= element.id
 	tinsert(elements, element)
 	return element
@@ -203,7 +204,8 @@ local function addtextobject( g, style, text )
 			pid = pelement.gid or nil
 		end
 	end	
-	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top )
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
+	geom.update( renderobj.gid )
 		
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
@@ -236,7 +238,8 @@ local function addbuttonobject( g, style )
 		end
 	end
 	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top )
-	
+	geom.update( renderobj.gid )
+		
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
 	return renderobj

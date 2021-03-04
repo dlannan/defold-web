@@ -79,11 +79,12 @@ local function textdefault( g, style, text )
 	g.cursor.top 	= g.cursor.top + middle
 	g.cursor.left 	= g.cursor.left + style.margin.left
 
-	if(style.margin == nil) then print(style.etype) end
-	layout.addtextobject( g, style, text )
-	
 	style.width 	= w 
 	style.height 	= h	
+	
+	if(style.margin == nil) then print(style.etype) end
+	layout.addtextobject( g, style, text )
+
 	-- dont play with the "top" position this is the linebase position for text
 	g.cursor.top 	= savedtop 
 	g.cursor.left 	= g.cursor.left + w + style.margin.right
@@ -107,17 +108,9 @@ end
 
 local function elementclose( g, style )
 
-	local element 		= layout.getelement(style.elementid)
- 	element.width 		= style.width or 0
- 	element.height 		= style.height or 0
-	--g.cursor.left 		= g.cursor.left + element.width
-	--layout.updateelement( style.elementid, element )
-	-- if(style.etype == "body") then print(style.etype, element.pos.left, element.pos.top, element.width, element.height) end	
-	
-	local geom 			= layout.getgeom()
-	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )	
-
-	--g.cursor.left 		= geom[ element.gid ].right
+ 	local element 		= layout.getelement(style.elementid)
+ 	local geom 			= layout.getgeom()
+ 	geom.renew( element.gid, nil, nil, style.width, style.height )	
 end 
 
 ----------------------------------------------------------------------------------
