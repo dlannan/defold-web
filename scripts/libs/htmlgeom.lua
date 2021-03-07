@@ -48,17 +48,17 @@ geommanager.create 	= function( frame, cursor )
 
 	geom.checkgeomchanges = function(pg, g )
 
-		local tgeom = { left = MAX_WIDTH, top = MAX_HEIGHT, width = 0, height = 0, right = 0, bottom = 0 }
+		local tgeom = { left = g.left, top = g.top, width = 0, height = 0, right = 0, bottom = 0 }
 		-- Only check first level children (we assume they are done, or will be done later)
 		for k,v in ipairs(pg.childs) do 
 			mergegeom( geom.geometries[v], tgeom )
 		end 
 		mergegeom( g, tgeom )
-		updategeom( pg, tgeom )
+		--updategeom( pg, tgeom )
 	end 
 	
 	
-	geom.traverseup = function ( geomid, g ) 
+	geom.traverseup = function ( g ) 
 
 		if( g.pid ) then 
 			local pg = geom.geometries[g.pid] or nil 
@@ -66,9 +66,22 @@ geommanager.create 	= function( frame, cursor )
 
 			-- Update parent if bounds of the child geom impact it
 			geom.checkgeomchanges( pg, g )
-			geom.traverseup(g.pid, pg)
+			io.write(pg.gid.."-->")
+			geom.traverseup(pg)
+		else 
+			print("\n")
 		end 
 	end 
+
+	geom.addchildtoparent = function( newgoem )
+
+		if(newgoem.pid) then 
+			local pg = geom.geometries[newgoem.pid] or nil 
+			if(pg) then 
+				tinsert(pg.childs, geom.gid)
+			end
+		end 
+	end	
 	
 	-- Add a new geometry. If name is empty it will be generated, and if parent is empty then it is a root geom
 	--   All other params will default to 0 if not set
@@ -95,13 +108,7 @@ geommanager.create 	= function( frame, cursor )
 			childs	= {},				-- children ids of this geom
 		}
 
-		if(parentid) then 
-			local pg = geom.geometries[parentid] or nil 
-			if(pg) then 
-				tinsert(pg.childs, geom.geomid)
-			end
-		end 
-	
+		geom.addchildtoparent(newgeom)
 		geom.geometries[newgeom.gid] = newgeom 	
 		return newgeom.gid
 	end
@@ -120,7 +127,7 @@ geommanager.create 	= function( frame, cursor )
 		if(geomid == nil) then return nil end -- silent fail check returns!
 		local g = geom.geometries[geomid] or nil 
 		if(g == nil) then return nil end -- silent fail check returns!
-		geom.traverseup( geomid, g )
+		geom.traverseup( g )
 	end
 	
 	-- Setting any of the params to nil will use current values
@@ -138,7 +145,7 @@ geommanager.create 	= function( frame, cursor )
 		g.bottom 	= g.top + g.height
 
 		-- Force a parent update - may need to resize!
-		geom.traverseup( geomid, g )
+		geom.traverseup( g )
 		return true
 	end
 

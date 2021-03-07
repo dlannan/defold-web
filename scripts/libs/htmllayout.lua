@@ -72,7 +72,7 @@ local function rendertext( g, v )
 	local style 	= v.style
 	if(type(text) ~= "string") then return end 
 	g.gcairo:FontSetFace(style.fontface, style.fontstyle, style.fontweight)	
-	g.gcairo:RenderText( text, g.cursor.left, g.cursor.top, style.textsize, tcolor )
+	--g.gcairo:RenderText( text, g.cursor.left, g.cursor.top, style.textsize, tcolor )
 end 
 
 ----------------------------------------------------------------------------------
@@ -88,15 +88,18 @@ local function renderbutton( g, v )
 end 
 
 ----------------------------------------------------------------------------------
-local bgcolor	= { r=1, g=1, b=1, a=0 }
-local brdrcolor = { r=0, g=0, b=0, a=1 }
+local bgcolor		= { r=1, g=1, b=1, a=0 }
+local brdrcolor 	= { r=0, g=0, b=0, a=1 }
+local margincolor 	= { r=0, g=0, b=1, a=1 }
 
-local function renderelement( g, v) 
+local function renderelement( g, ele) 
 
-	local ele = getelement( v.eid )
+	-- local ele = getelement( v.eid )
 	-- g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
 	local tg = geom.geometries[ele.gid]
+	--print("TG:", tg.left, tg.top, tg.width, tg.height)
 	g.gcairo:RenderBox( tg.left, tg.top, tg.width, tg.height, 0, bgcolor, brdrcolor )
+	g.gcairo:RenderText( tostring(tg.gid), tg.left, tg.top, 16, tcolor )
 end	
 
 ----------------------------------------------------------------------------------
@@ -112,7 +115,9 @@ local function dolayout( )
 			rendertext(g, v)
 		end
 	end
-	for k, v in ipairs( render ) do 
+
+	-- Just dump all the element layouts as boxes
+	for k, v in pairs( elements ) do 
 
 		local g = { gcairo = v.gcairo, cursor=v.cursor, frame = v.frame }
 		-- Render a box around all elements 
@@ -152,20 +157,21 @@ end
 local function addelement( g, style, attribs )
 
 	local element = {}
+	element.gcairo 		= g.gcairo
 	element.etype 		= style.etype
 	element.border 		= { width = 2, height = 2 }
 	element.background 	= { color = style.background or "#aaaaaa" }
 	element.margin 		= { top = style.margin.top or 0, bottom = style.margin.bottom or 0, left = style.margin.left or 0, right = style.margin.right or 0 }
 	element.pos 		= { top = g.cursor.top, left = g.cursor.left }
-	element.width 		= attribs.width or style.width or 0
-	element.height 		= attribs.height or style.height or 0
+	element.width 		= (attribs.width or style.width or 0)
+	element.height 		= (attribs.height or style.height or 0)
 	element.id 			= #elements + 1
 
 	local pid = nil 
-	if(style.pstyle.elementid) then 
+	if(style.pstyle and style.pstyle.elementid) then 
 		local eid 			= elements[style.pstyle.elementid]
 		if(eid) then 
-			local pelement 		= geom[eid.gid]
+			local pelement 	= geom[eid.gid]
 			pid = pelement.gid or nil
 		end
 	end
@@ -197,17 +203,17 @@ local function addtextobject( g, style, text )
 	}
 
 	local pid = nil 
-	if(style.pstyle.elementid) then 
+	if(style.pstyle and style.pstyle.elementid) then 
 		local eid 			= elements[style.pstyle.elementid]
 		if(eid) then 
-			local pelement 		= geom[eid.gid]
+			local pelement 	= geom[eid.gid]
 			pid = pelement.gid or nil
 		end
 	end	
 	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
-	-- Render obejcts are queued in order of the output data with the correct styles
+	-- Render objects are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
 end 
 
@@ -237,7 +243,7 @@ local function addbuttonobject( g, style )
 			pid = pelement.gid or nil
 		end
 	end
-	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top )
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
 	-- Render obejcts are queued in order of the output data with the correct styles
@@ -257,8 +263,8 @@ end
 
 return {
 
-	init 		= init,
-	finish 		= finish,
+	init 			= init,
+	finish 			= finish,
 
 	addelement		= addelement,
 	getelement		= getelement,

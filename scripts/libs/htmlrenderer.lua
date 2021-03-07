@@ -20,7 +20,7 @@ local frame = { top = 0.0, left = 0.0 }
 ----------------------------------------------------------------------------------
 
 local stylestack = {}
-stylestack[1] = { textsize = FONT_SIZES.P, linesize = FONT_SIZES.P * 1.5, maxlinesize = 0 }
+stylestack[1] = { textsize = FONT_SIZES.p, linesize = FONT_SIZES.p * 1.5, maxlinesize = 0, width = 0, height = 0 }
 
 ----------------------------------------------------------------------------------
 local function xmlhandler( gcairo, xml )

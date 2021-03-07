@@ -14,20 +14,22 @@ local tcolor = { r=0.0, b=1.0, g=0.0, a=1.0 }
 
 local FONT_SIZES = {
 
-	H1		= 24.0,
-	H2 		= 20.0,
-	H3 		= 16.0,
-	H4 		= 14.0,
-	H5 		= 12.0,
-	H6 		= 10.0,
+	h1		= 24.0,
+	h2 		= 20.0,
+	h3 		= 16.0,
+	h4 		= 14.0,
+	h5 		= 12.0,
+	h6 		= 10.0,
 
-	P 		= 14.0,
+	p 		= 14.0,
 }
 
 ----------------------------------------------------------------------------------
 
 local TEXT_CONST = {
-	TAB 		= FONT_SIZES.P * 2.0,
+
+	NONE 		= 0,
+	TAB 		= FONT_SIZES.p * 2.0,
 
 	MARGINS 	= 1.0 / 1.1875,
 	HEADINGS 	= 1.0 / 1.8,
@@ -72,22 +74,12 @@ end
 
 local function textdefault( g, style, text )
 
-	local savedtop 	= g.cursor.top
 	local w,h 		= g.gcairo:GetTextSize(text, style.textsize, style)	
-
-	local middle 	= style.linesize * 0.35
-	g.cursor.top 	= g.cursor.top + middle
-	g.cursor.left 	= g.cursor.left + style.margin.left
-
 	style.width 	= w 
 	style.height 	= h	
 	
 	if(style.margin == nil) then print(style.etype) end
 	layout.addtextobject( g, style, text )
-
-	-- dont play with the "top" position this is the linebase position for text
-	g.cursor.top 	= savedtop 
-	g.cursor.left 	= g.cursor.left + w + style.margin.right
 end 
 
 ----------------------------------------------------------------------------------
@@ -102,6 +94,7 @@ local function elementopen( g, style, attribs )
 
 	local element 		= layout.addelement( g, style, attribs )
 	style.elementid 	= element.id
+	g.cursor.left = g.cursor.left + element.margin.left
 end 
 
 ----------------------------------------------------------------------------------
@@ -110,7 +103,13 @@ local function elementclose( g, style )
 
  	local element 		= layout.getelement(style.elementid)
  	local geom 			= layout.getgeom()
- 	geom.renew( element.gid, nil, nil, style.width, style.height )	
+	local dim 			= geom[element.gid]
+
+-- print(element.etype, dim.left, dim.top, dim.width, dim.height)
+	geom.renew( element.gid, element.left, element.top, style.width, style.height )	
+
+	g.cursor.left = g.cursor.left + dim.width
+	g.cursor.left = g.cursor.left + element.margin.right
 end 
 
 ----------------------------------------------------------------------------------
@@ -151,12 +150,16 @@ local function buttonclose( g, style )
 end
 
 ----------------------------------------------------------------------------------
-
+-- Default close always end the line of elements back to the leftmost start position
 local function defaultclose( g, style )
 	
-	g.cursor.top 	= g.cursor.top + style.linesize
 	elementclose(g, style)
-	g.cursor.left 	= g.frame.left
+	-- Step a line
+	g.cursor.top 	= g.cursor.top + style.linesize
+	local pmargin 	= style.pstyle.margin or 0
+	if(pmargin ~= 0) then pmargin = pmargin.left end
+	-- Return to leftmost + parent margin
+	g.cursor.left 	= g.frame.left + pmargin
 end	
 
 local function closenone( g, style )
@@ -167,8 +170,8 @@ end
 
 local function headingopen( g, style, attribs )
 
-	style.textsize 	= FONT_SIZES[string.upper(style.etype)]
-	style.margin 	= getmargin(style, TEXT_CONST.HEADINGS, 0)
+	style.textsize 	= FONT_SIZES[string.lower(style.etype)]
+	style.margin 	= getmargin(style, TEXT_CONST.HEADINGS, 2)
 	style.linesize 	= style.textsize + style.margin.top + style.margin.bottom
 	elementopen(g, style, attribs)
 end	
@@ -211,25 +214,23 @@ htmlelements["h6"]  = {
 
 htmlelements["p"]  = {
 	opened 		= function( g, style, attribs)
-		style.textsize 	= FONT_SIZES.P
-		style.margin 	= getmargin(style, TEXT_CONST.MARGINS, 0)
+		style.textsize 	= FONT_SIZES.p
+		style.margin 	= getmargin(style, TEXT_CONST.MARGINS, 2)
 		style.linesize 	= style.textsize
-		g.cursor.top 	= g.cursor.top + style.margin.top
+		--g.cursor.top 	= g.cursor.top + style.margin.top
 		elementopen(g, style, attribs)
 	end,
-	closed 		= function( g, style )
-		g.cursor.top 	= g.cursor.top + style.linesize + style.margin.bottom
-		elementclose(g, style)
-		g.cursor.left 	= g.frame.left
-	end,
+	closed 		= defaultclose,
 }
 
 ----------------------------------------------------------------------------------
 
 htmlelements["i"]  = {
 	opened 		= function( g, style, attribs )
-		style.margin 		= getmargin(style, 0, 0)
+		style.textsize 		= style.pstyle.textsize
+		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
 		style.fontstyle 	= 1
+		style.linesize 		= style.textsize
 		elementopen(g, style, attribs)
 	end,
 	closed 		= function( g, style )	
@@ -240,8 +241,10 @@ htmlelements["i"]  = {
 
 htmlelements["b"]  = {
 	opened 		= function( g, style, attribs )
-		style.margin 		= getmargin(style, 0, 0)
+		style.textsize 		= style.pstyle.textsize
+		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
 		style.fontweight 	= 1
+		style.linesize 		= style.textsize
 		elementopen(g, style, attribs)
 	end,
 	closed 		= function( g, style )	
@@ -260,17 +263,15 @@ htmlelements["br"]  = {
 		--g.cursor.top = g.cursor.top + style.linesize
 		--elementopen(g, style, attribs)
 	end,
-	closed 		= function( g, style )
-		g.cursor.top 		= g.cursor.top + style.linesize
-	end,
+	closed 		= defaultclose,
 }
 
 ----------------------------------------------------------------------------------
 
 htmlelements["blockquote"] = {
 	opened 		= function( g, style, attribs )
-		g.cursor.left 		= g.cursor.left + TEXT_CONST.TAB
-		style.margin 		= getmargin(style, TEXT_CONST.MARGINS, 0)		
+		style.textsize 		= FONT_SIZES.p
+		style.margin 		= getmargin(style, TEXT_CONST.MARGINS, 40)		
 		--g.cursor.top = g.cursor.top + style.linesize
 		style.linesize 		= getlineheight(style)
 		elementopen(g, style, attribs)
@@ -313,7 +314,7 @@ htmlelements["head"] = {
 ----------------------------------------------------------------------------------
 
 return {
-	FONT_SIZES 	= FONT_SIZES,
+	FONT_SIZES 		= FONT_SIZES,
 
 	addtextobject 	= textdefault,
 
