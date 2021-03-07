@@ -6,6 +6,13 @@ local tremove 		= table.remove
 
 local MAX_WIDTH 	= 999999
 local MAX_HEIGHT 	= 999999
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+local function printgeom( g )
+	print("GID: ", g.gid, "PID:", g.pid, "LTWH", g.left, g.top, g.width, g.height)
+end
+
 -----------------------------------------------------------------------------------------------------------------------------------
 
 local function updategeom( pg, tg )
@@ -19,9 +26,13 @@ local function updategeom( pg, tg )
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
-
 local function mergegeom( g, tg )
 
+	-- Dont merge self.. silly..
+	if(g.gid == tg.gid) then return end 
+	-- print("Merging ", g.gid, "  into ", tg.gid)
+	-- printgeom(g) 
+	-- printgeom(tg)
 	if( g.left + g.width > tg.left + tg.width ) then tg.width = g.left + g.width - tg.left end  
 	if( g.top + g.height > tg.top + tg.height ) then tg.height = g.top + g.height - tg.top end  
 	if( g.left < tg.left) then tg.left = g.left end 
@@ -49,13 +60,11 @@ geommanager.create 	= function( frame, cursor )
 
 	geom.checkgeomchanges = function(pg, g )
 
-		local tgeom = deepcopy( pg )
 		-- Only check first level children (we assume they are done, or will be done later)
 		for k,v in ipairs(pg.childs) do 
-			mergegeom( geom.geometries[v], tgeom )
+			mergegeom( geom.geometries[v], pg )
 		end 
-		mergegeom( g, tgeom )
-		updategeom( pg, tgeom )
+		mergegeom( g, pg )
 	end 
 	
 	
@@ -71,16 +80,16 @@ geommanager.create 	= function( frame, cursor )
 			geom.traverseup(pg)
 		else 
 			-- print(ppath.."\n")
-			ppath = ""
+			-- ppath = ""
 		end 
 	end 
 
-	geom.addchildtoparent = function( newgoem )
+	geom.addchildtoparent = function( newgeom )
 
-		if(newgoem.pid) then 
-			local pg = geom.geometries[newgoem.pid] or nil 
+		if(newgeom.pid) then 
+			local pg = geom.geometries[newgeom.pid] or nil 
 			if(pg) then 
-				tinsert(pg.childs, geom.gid)
+				tinsert(pg.childs, newgeom.gid)
 			end
 		end 
 	end	
@@ -110,8 +119,8 @@ geommanager.create 	= function( frame, cursor )
 			childs	= {},				-- children ids of this geom
 		}
 
-		geom.addchildtoparent(newgeom)
 		geom.geometries[newgeom.gid] = newgeom 	
+		geom.addchildtoparent(newgeom)
 		return newgeom.gid
 	end
 
@@ -121,6 +130,14 @@ geommanager.create 	= function( frame, cursor )
 		if(g == nil) then return nil end -- silent fail check returns!
 		geom.geometries[gid] = nil
 		return true
+	end
+
+	geom.clear		= function()
+
+		for k,v in ipairs(geom.geometries) do 
+			v = nil 
+		end
+		geom.geomid = 0
 	end
 
 	-- Takes a single geomid and updates all parents (travserses upwards) 
@@ -147,7 +164,7 @@ geommanager.create 	= function( frame, cursor )
 		g.bottom 	= g.top + g.height
 
 		-- Force a parent update - may need to resize!
-		geom.traverseup( g )
+		--geom.traverseup( g )
 		return true
 	end
 

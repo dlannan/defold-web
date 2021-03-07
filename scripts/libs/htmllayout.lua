@@ -48,6 +48,21 @@ end
 
 ----------------------------------------------------------------------------------
 
+local function getparent( style )
+
+	local pid = nil 
+	if(style.pstyle and style.pstyle.elementid) then 
+		local eid 			= elements[style.pstyle.elementid]
+		if(eid) then 
+			local pelement 	= geom[eid.gid]
+			pid = pelement.gid or nil
+		end
+	end
+	return pid
+end 
+
+----------------------------------------------------------------------------------
+
 local function getgeometry( )
 
 	return geom
@@ -65,14 +80,14 @@ local function updateelement( eid, element )
 	elements[eid] = element 
 end
 ----------------------------------------------------------------------------------
-
+-- TODO: this need to be changed to use element geometry instead of cursor.
 local function rendertext( g, v )
 
 	local text 		= v.text
 	local style 	= v.style
 	if(type(text) ~= "string") then return end 
 	g.gcairo:FontSetFace(style.fontface, style.fontstyle, style.fontweight)	
-	--g.gcairo:RenderText( text, g.cursor.left, g.cursor.top, style.textsize, tcolor )
+	g.gcairo:RenderText( text, g.cursor.left, g.cursor.top + style.textsize * 0.75, style.textsize, tcolor )
 end 
 
 ----------------------------------------------------------------------------------
@@ -102,6 +117,14 @@ local function renderelement( g, ele)
 	g.gcairo:RenderText( tostring(tg.gid), tg.left, tg.top, 16, tcolor )
 end	
 
+local function rendergeom( g, tg ) 
+
+	-- local ele = getelement( v.eid )
+	-- g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
+	--print("TG:", tg.gid, tg.left, tg.top, tg.width, tg.height)
+	g.gcairo:RenderBox( tg.left, tg.top, tg.width, tg.height, 0, bgcolor, brdrcolor )
+	--g.gcairo:RenderText( tostring(tg.gid), tg.left, tg.top, 16, tcolor )
+end	
 ----------------------------------------------------------------------------------
 
 local function dolayout( )
@@ -117,13 +140,19 @@ local function dolayout( )
 	end
 
 	-- Just dump all the element layouts as boxes
-	for k, v in pairs( elements ) do 
+-- 	for k, v in pairs( elements ) do 
+-- 
+-- 		local g = { gcairo = v.gcairo, cursor=v.cursor, frame = v.frame }
+-- 		-- Render a box around all elements 
+-- 		renderelement( g, v)
+-- 	end 
 
-		local g = { gcairo = v.gcairo, cursor=v.cursor, frame = v.frame }
-		-- Render a box around all elements 
-		renderelement( g, v)
-	end 
-
+	local ele = elements[1]
+	local html = geom.geometries[1]
+	local g = { gcairo = ele.gcairo, cursor=ele.cursor, frame = ele.frame }
+	for k, v in ipairs(geom.geometries) do 
+		rendergeom( g, v )
+	end
 	-- geom.dump()
 end
 
@@ -134,14 +163,14 @@ local function doraster( )
 end
 
 ----------------------------------------------------------------------------------
+-- Gen new geom layout every frame?!! (for now - this will be cached later)
+geom 		= GM.create(frame, cursor)
 
 local function init(frame, cursor) 
 	render 		= {}
 	layout 		= {}
 	elements 	= {}
-
-	-- Gen new geom layout every frame?!! (for now - this will be cached later)
-	geom 		= GM.create(frame, cursor)
+	geom.clear()
 end 
 
 local function finish() 
@@ -169,14 +198,7 @@ local function addelement( g, style, attribs )
 	element.height 		= (attribs.height or style.height or 0)
 	element.id 			= #elements + 1
 
-	local pid = nil 
-	if(style.pstyle and style.pstyle.elementid) then 
-		local eid 			= elements[style.pstyle.elementid]
-		if(eid) then 
-			local pelement 	= geom[eid.gid]
-			pid = pelement.gid or nil
-		end
-	end
+	local pid = getparent(style)
 	element.gid 		= geom.add( style.etype, pid, element.pos.left, element.pos.top, element.width, element.height )
 	geom.update( element.gid )
 	
@@ -204,14 +226,7 @@ local function addtextobject( g, style, text )
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 
-	local pid = nil 
-	if(style.pstyle and style.pstyle.elementid) then 
-		local eid 			= elements[style.pstyle.elementid]
-		if(eid) then 
-			local pelement 	= geom[eid.gid]
-			pid = pelement.gid or nil
-		end
-	end	
+	local pid = getparent(style)
 	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
@@ -237,14 +252,7 @@ local function addbuttonobject( g, style )
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 
-	local pid = nil 
-	if(style.pstyle.elementid) then 
-		local eid 			= elements[style.pstyle.elementid]
-		if(eid) then 
-			local pelement 		= geom[eid.gid]
-			pid = pelement.gid or nil
-		end
-	end
+	local pid = getparent(style)
 	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		

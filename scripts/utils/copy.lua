@@ -16,3 +16,17 @@ function deepcopy(t)
 	setmetatable(res,mt)
 	return res
 end
+
+
+-- Data Copy
+-- This only copues the first level objects. Any child tables are ignored
+
+function datacopy(t)
+	local res = {}
+	for k,v in pairs(t) do 
+		if(type(v) ~= "table") then 
+			res[k] = v
+		end
+	end
+	return res
+end

@@ -80,6 +80,7 @@ local function textdefault( g, style, text )
 	
 	if(style.margin == nil) then print(style.etype) end
 	layout.addtextobject( g, style, text )
+	g.cursor.left = g.cursor.left + w
 end 
 
 ----------------------------------------------------------------------------------
@@ -106,10 +107,9 @@ local function elementclose( g, style )
 	local dim 			= geom[element.gid]
 
 -- print(element.etype, dim.left, dim.top, dim.width, dim.height)
-	geom.renew( element.gid, element.left, element.top, style.width, style.height )	
+	geom.renew( element.gid, dim.left, dim.top, dim.width, dim.height )
 
-	g.cursor.left = g.cursor.left + dim.width
-	g.cursor.left = g.cursor.left + element.margin.right
+	g.cursor.left = g.cursor.left + style.margin.right
 end 
 
 ----------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ local function buttonopen( g, style, attribs )
 	local element 		= layout.addelement( g, style, attribs )
 	layout.addbuttonobject( g, style )
 
-	-- Move cursor to firs correct top left position
+	-- Move cursor to first correct top left position
 	g.cursor.top 		= g.cursor.top + element.margin.top
 	g.cursor.left 		= g.cursor.left + element.margin.left
 end 
@@ -142,8 +142,8 @@ local function buttonclose( g, style )
 
 	local geom = layout.getgeom()
 	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
-		
-	g.cursor.left 	= geom[ element.gid ].right
+			
+	g.cursor.left 	= g.cursor.left + style.margin.right
 	g.cursor.top 	= geom[ element.gid ].top
 	-- Buttons do not modify the top cursor
 	if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
@@ -227,10 +227,8 @@ htmlelements["p"]  = {
 
 htmlelements["i"]  = {
 	opened 		= function( g, style, attribs )
-		style.textsize 		= style.pstyle.textsize
 		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
 		style.fontstyle 	= 1
-		style.linesize 		= style.textsize
 		elementopen(g, style, attribs)
 	end,
 	closed 		= function( g, style )	
@@ -241,10 +239,8 @@ htmlelements["i"]  = {
 
 htmlelements["b"]  = {
 	opened 		= function( g, style, attribs )
-		style.textsize 		= style.pstyle.textsize
 		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
 		style.fontweight 	= 1
-		style.linesize 		= style.textsize
 		elementopen(g, style, attribs)
 	end,
 	closed 		= function( g, style )	
