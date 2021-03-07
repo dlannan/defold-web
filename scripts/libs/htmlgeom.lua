@@ -32,7 +32,8 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-local geommanager = {}
+local geommanager 	= {}
+local ppath 		= ""
 
 geommanager.create 	= function( frame, cursor )
 
@@ -48,13 +49,13 @@ geommanager.create 	= function( frame, cursor )
 
 	geom.checkgeomchanges = function(pg, g )
 
-		local tgeom = { left = g.left, top = g.top, width = 0, height = 0, right = 0, bottom = 0 }
+		local tgeom = deepcopy( pg )
 		-- Only check first level children (we assume they are done, or will be done later)
 		for k,v in ipairs(pg.childs) do 
 			mergegeom( geom.geometries[v], tgeom )
 		end 
 		mergegeom( g, tgeom )
-		--updategeom( pg, tgeom )
+		updategeom( pg, tgeom )
 	end 
 	
 	
@@ -66,10 +67,11 @@ geommanager.create 	= function( frame, cursor )
 
 			-- Update parent if bounds of the child geom impact it
 			geom.checkgeomchanges( pg, g )
-			io.write(pg.gid.."-->")
+			-- ppath = ppath..pg.gid.."-->"
 			geom.traverseup(pg)
 		else 
-			print("\n")
+			-- print(ppath.."\n")
+			ppath = ""
 		end 
 	end 
 
@@ -148,6 +150,17 @@ geommanager.create 	= function( frame, cursor )
 		geom.traverseup( g )
 		return true
 	end
+
+	-- Display the tree hierachy of the geometries
+	geom.dump 		= function( ) 
+
+		local idx, nextgeom = next(geom.geometries)
+		while idx do
+
+			print("Id:", nextgeom.gid, "Pid:", nextgeom.pid)
+			idx, nextgeom = next(geom.geometries, idx)
+		end
+	end 
 
 	setmetatable( geom, 
 	{

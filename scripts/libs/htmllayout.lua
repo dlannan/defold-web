@@ -123,6 +123,8 @@ local function dolayout( )
 		-- Render a box around all elements 
 		renderelement( g, v)
 	end 
+
+	-- geom.dump()
 end
 
 ----------------------------------------------------------------------------------
