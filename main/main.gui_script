@@ -18,10 +18,10 @@ function on_message(self, message_id, message, sender)
 	-- Remove this function if not needed
 
 	if message_id == hash("initgui") then 
-		Gcairo:InitGui(RENDER_WIDTH, RENDER_HEIGHT)
+		-- Gcairo:InitGui(RENDER_WIDTH, RENDER_HEIGHT)
 	end
 	if message_id == hash("rendergui") then 
-		Gcairo:RenderGui()
+		-- Gcairo:RenderGui()
 	end
 end
 

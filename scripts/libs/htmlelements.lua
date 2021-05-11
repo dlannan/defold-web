@@ -70,24 +70,6 @@ local function getlineheight( style )
 	return style.textsize + style.margin.top + style.margin.bottom
 end
 
-----------------------------------------------------------------------------------
-
-local function textdefault( g, style, text )
-
-	local w,h 		= g.gcairo:GetTextSize(text, style.textsize, style)	
-	style.width 	= w 
-	style.height 	= h	
-	
-	if(style.margin == nil) then print(style.etype) end
-	layout.addtextobject( g, style, text )
-	g.cursor.left = g.cursor.left + w
-end 
-
-----------------------------------------------------------------------------------
-
-local function textnone( g, style, text )
-
-end 
 
 ----------------------------------------------------------------------------------
 
@@ -102,14 +84,37 @@ end
 
 local function elementclose( g, style )
 
- 	local element 		= layout.getelement(style.elementid)
- 	local geom 			= layout.getgeom()
+	local element 		= layout.getelement(style.elementid)
+	local geom 			= layout.getgeom()
 	local dim 			= geom[element.gid]
 
--- print(element.etype, dim.left, dim.top, dim.width, dim.height)
+	-- print(element.etype, dim.left, dim.top, dim.width, dim.height)
 	geom.renew( element.gid, dim.left, dim.top, dim.width, dim.height )
 
 	g.cursor.left = g.cursor.left + style.margin.right
+end 
+
+----------------------------------------------------------------------------------
+
+local function textdefault( g, style, attribs, text )
+
+	style.etype = "text"
+	local w,h 		= g.gcairo:GetTextSize(text, style.textsize, style)	
+	style.width 	= w 
+	style.height 	= h
+	
+	if(style.margin == nil) then print(style.etype) end
+	local element 	= layout.addelement( g, style, attribs )	
+
+	layout.addtextobject( g, style, text )
+
+	g.cursor.left 		= g.cursor.left + w
+	elementclose(g, style)
+end
+----------------------------------------------------------------------------------
+
+local function textnone( g, style, text )
+
 end 
 
 ----------------------------------------------------------------------------------
@@ -142,8 +147,8 @@ local function buttonclose( g, style )
 
 	local geom = layout.getgeom()
 	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
-			
-	g.cursor.left 	= g.cursor.left + style.margin.right
+
+	g.cursor.left 	= g.cursor.left + style.width + style.margin.right
 	g.cursor.top 	= geom[ element.gid ].top
 	-- Buttons do not modify the top cursor
 	if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end

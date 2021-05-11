@@ -8,12 +8,11 @@
 ----------------------------------------------------------------
 local dir	= {  init = 0, debug = false }
 ----------------------------------------------------------------
+local info = sys.get_sys_info()
 
-if ffi.os == "OSX" then
-    dir.folder_sep = "/"
-end
+dir.folder_sep = "/"
 
-if ffi.os == "Windows" then
+if info.system_name == "Windows" then
     dir.folder_sep = "\\"
 end
 
@@ -28,10 +27,9 @@ end
 function dir:osfile(filename)
 
     local newfile = filename
-    if ffi.os == "OSX" then
-        newfile = string.gsub(filename, "\\", "/")
-    end
-    if ffi.os == "Windows" then
+    newfile = string.gsub(filename, "\\", "/")
+
+    if info.system_name == "Windows" then
         newfile = string.gsub(filename, "/", "\\")
     end
 

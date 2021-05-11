@@ -53,7 +53,11 @@ local function xmlhandler( gcairo, xml )
 			if(type(k) == "number") then
 				if( type(v) == "string") then
 					if(string.find(v, "DOCTYPE") == nil) then
-						htmle.addtextobject( g, style, v )
+						local tstyle = deepcopy(style)
+						tstyle.pstyle = style
+						tinsert(stylestack, tstyle)
+						htmle.addtextobject( g, tstyle, xml.arg, v )
+						tremove( stylestack ) 
 					end
 				end
 

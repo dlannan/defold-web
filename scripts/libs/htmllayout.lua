@@ -99,7 +99,6 @@ local function renderbutton( g, v )
 	local ele = getelement( v.eid )
 	local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
 	g.gcairo:RenderButton(button, 0)
-	if(text) then rendertext( g, v ) end 
 end 
 
 ----------------------------------------------------------------------------------
@@ -187,6 +186,7 @@ end
 -- Try to replicate css properties here. 
 local function addelement( g, style, attribs )
 
+	attribs = attribs or { width = style.width, height = style.height }
 	local element = {}
 	element.gcairo 		= g.gcairo
 	element.etype 		= style.etype
@@ -212,7 +212,6 @@ end
 local function addtextobject( g, style, text )
 
 	local stylecopy = deepcopy(style)
-	stylecopy.button = style.button 
 
 	-- Try to treat _all_ output as text + style. Style here means a css objects type
 	--    like border, background, size, margin etc
@@ -227,6 +226,7 @@ local function addtextobject( g, style, text )
 	}
 
 	local pid = getparent(style)
+	if(pid) then print(text, style.width, pid, style.pstyle.etype) end
 	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
@@ -251,14 +251,13 @@ local function addbuttonobject( g, style )
 		cursor 	= { top = g.cursor.top, left = g.cursor.left },
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
-
+	
 	local pid = getparent(style)
 	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
-	return renderobj
 end 
 
 ----------------------------------------------------------------------------------

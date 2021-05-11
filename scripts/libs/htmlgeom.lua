@@ -26,19 +26,27 @@ local function updategeom( pg, tg )
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
-local function mergegeom( g, tg )
+local function mergegeom( tg, g )
 
 	-- Dont merge self.. silly..
 	if(g.gid == tg.gid) then return end 
 	-- print("Merging ", g.gid, "  into ", tg.gid)
 	-- printgeom(g) 
 	-- printgeom(tg)
-	if( g.left + g.width > tg.left + tg.width ) then tg.width = g.left + g.width - tg.left end  
-	if( g.top + g.height > tg.top + tg.height ) then tg.height = g.top + g.height - tg.top end  
-	if( g.left < tg.left) then tg.left = g.left end 
-	if( g.top < tg.top) then tg.top = g.top end
+
+	local minleft = math.min(g.left, tg.left)
+	local maxleft = math.max(g.left + g.width, tg.left + tg.width)
+	local mintop = math.min( g.top, tg.top)
+	local maxtop = math.max( g.top + g.height, tg.top + tg.height)
+
+	tg.left = minleft 
+	tg.width = maxleft - minleft 
+	tg.top = mintop 
+	tg.height = maxtop - mintop
+	
 	tg.right = tg.left + tg.width 
 	tg.bottom = tg.top + tg.height
+	return tg 
 end 
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -62,9 +70,9 @@ geommanager.create 	= function( frame, cursor )
 
 		-- Only check first level children (we assume they are done, or will be done later)
 		for k,v in ipairs(pg.childs) do 
-			mergegeom( geom.geometries[v], pg )
+			mergegeom( pg, geom.geometries[v] )
 		end 
-		mergegeom( g, pg )
+		mergegeom( pg, g )
 	end 
 	
 	
@@ -169,16 +177,20 @@ geommanager.create 	= function( frame, cursor )
 	end
 
 	-- Display the tree hierachy of the geometries
-	geom.dump 		= function( ) 
+	geom.dump 		= function( startid, tabs ) 
 
-		local idx, nextgeom = next(geom.geometries)
-		while idx do
-
-			print("Id:", nextgeom.gid, "Pid:", nextgeom.pid)
-			idx, nextgeom = next(geom.geometries, idx)
-		end
+		if(startid == nil) then startid = 1 end 
+		if(tabs == nil) then tabs = 1 end 
+		
+		local thisgeom = geom.geometries[startid]
+		if(thisgeom == nil) then return end
+		
+		print(string.rep("    ", tabs).."Id: ", thisgeom.gid, "Pid:", thisgeom.pid, "Width:", thisgeom.width or "")
+		for k,v in ipairs(thisgeom.childs) do
+			geom.dump( v, tabs+1 )
+		end 
 	end 
-
+	
 	setmetatable( geom, 
 	{
 		__index 	= function(t, k)

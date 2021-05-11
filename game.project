@@ -14,10 +14,13 @@ input_method = HiddenInputField
 
 [project]
 title = defold_web
-custom_resources = scripts/, data/, ffi/
+custom_resources = scripts/, data/
 bundle_resources = /libs, /data
-dependencies = 
+dependencies = http://localhost:8000//extension-imgui.zip
 
 [library]
 include_dirs = imageloader
+
+[input]
+game_binding = /input/imgui.input_bindingc
 
