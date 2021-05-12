@@ -86,8 +86,11 @@ local function rendertext( g, v )
 	local text 		= v.text
 	local style 	= v.style
 	if(type(text) ~= "string") then return end 
-	g.gcairo:FontSetFace(style.fontface, style.fontstyle, style.fontweight)	
-	g.gcairo:RenderText( text, g.cursor.left, g.cursor.top + style.textsize * 0.75, style.textsize, tcolor )
+	imgui.font_push(g.ctx.ctx.fontids[style.fontface or 0]) -- , style.fontstyle, style.fontweight)	
+	imgui.set_cursor_pos(g.cursor.left, g.cursor.top + style.textsize * 0.75)
+	imgui.set_window_font_scale(style.textsize)
+	imgui.text_colored( text, tcolor.r, tcolor.b, tcolor.g, tcolor.a )
+	imgui.font_pop()
 end 
 
 ----------------------------------------------------------------------------------
@@ -97,8 +100,11 @@ local function renderbutton( g, v )
 	local text 		= v.text
 	local style 	= v.style
 	local ele = getelement( v.eid )
-	local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
-	g.gcairo:RenderButton(button, 0)
+	-- local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
+	imgui.set_cursor_pos(ele.pos.left, ele.pos.top)
+	if imgui.button(v.text or "") then
+		-- self.counter = self.counter + 1
+	end
 end 
 
 ----------------------------------------------------------------------------------
@@ -121,7 +127,7 @@ local function rendergeom( g, tg )
 	-- local ele = getelement( v.eid )
 	-- g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
 	--print("TG:", tg.gid, tg.left, tg.top, tg.width, tg.height)
-	g.gcairo:RenderBox( tg.left, tg.top, tg.width, tg.height, 0, bgcolor, brdrcolor )
+	--imgui.draw_rect( tg.left, tg.top, tg.width, tg.height, 0xffffff00) -- , brdrcolor )
 	--g.gcairo:RenderText( tostring(tg.gid), tg.left, tg.top, 16, tcolor )
 end	
 ----------------------------------------------------------------------------------
@@ -130,7 +136,7 @@ local function dolayout( )
 
 	for k, v in ipairs( render ) do 
 
-		local g = { gcairo = v.gcairo, cursor=v.cursor, frame = v.frame }
+		local g = { ctx = v.ctx, cursor=v.cursor, frame = v.frame }
 		if( v.etype == "button" ) then 
 			renderbutton(g, v)
 		else 
@@ -141,18 +147,18 @@ local function dolayout( )
 	-- Just dump all the element layouts as boxes
 -- 	for k, v in pairs( elements ) do 
 -- 
--- 		local g = { gcairo = v.gcairo, cursor=v.cursor, frame = v.frame }
+-- 		local g = { ctx = v.ctx, cursor=v.cursor, frame = v.frame }
 -- 		-- Render a box around all elements 
 -- 		renderelement( g, v)
 -- 	end 
 
-	local ele = elements[1]
-	local html = geom.geometries[1]
-	local g = { gcairo = ele.gcairo, cursor=ele.cursor, frame = ele.frame }
-	for k, v in ipairs(geom.geometries) do 
-		rendergeom( g, v )
-	end
-	-- geom.dump()
+	-- local ele = elements[1]
+	-- local html = geom.geometries[1]
+	-- local g = { ctx = ele.ctx, cursor=ele.cursor, frame = ele.frame }
+	-- for k, v in ipairs(geom.geometries) do 
+	-- 	rendergeom( g, v )
+	-- end
+	-- -- geom.dump()
 end
 
 ----------------------------------------------------------------------------------
@@ -188,7 +194,7 @@ local function addelement( g, style, attribs )
 
 	attribs = attribs or { width = style.width, height = style.height }
 	local element = {}
-	element.gcairo 		= g.gcairo
+	element.ctx 		= g
 	element.etype 		= style.etype
 	element.border 		= { width = 2, height = 2 }
 	element.background 	= { color = style.background or "#aaaaaa" }
@@ -216,7 +222,7 @@ local function addtextobject( g, style, text )
 	-- Try to treat _all_ output as text + style. Style here means a css objects type
 	--    like border, background, size, margin etc
 	local renderobj = { 
-		gcairo 	= g.gcairo, 
+		ctx 	= g,
 		etype 	= style.etype,
 		eid 	= style.elementid,
 		style 	= stylecopy, 
@@ -244,7 +250,7 @@ local function addbuttonobject( g, style )
 	-- Try to treat _all_ output as text + style. Style here means a css objects type
 	--    like border, background, size, margin etc
 	local renderobj = { 
-		gcairo 	= g.gcairo, 
+		ctx 	= g, 
 		etype 	= style.etype,
 		eid 	= style.elementid,
 		style 	= stylecopy, 

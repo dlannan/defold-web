@@ -95,12 +95,14 @@ local function elementclose( g, style )
 end 
 
 ----------------------------------------------------------------------------------
-
+-- imgui.set_window_font_scale(1.2)
+-- imgui.text("This is some useful text.")
+-- 
 local function textdefault( g, style, attribs, text )
 
 	style.etype = "text"
-	local w,h 		= g.gcairo:GetTextSize(text, style.textsize, style)	
-	style.width 	= w 
+	local w, h 		= imgui.text_getsize(text)
+	style.width 	= w
 	style.height 	= h
 	
 	if(style.margin == nil) then print(style.etype) end
@@ -108,7 +110,7 @@ local function textdefault( g, style, attribs, text )
 
 	layout.addtextobject( g, style, text )
 
-	g.cursor.left 		= g.cursor.left + w
+	g.cursor.left 		= g.cursor.left + w * 16
 	elementclose(g, style)
 end
 ----------------------------------------------------------------------------------

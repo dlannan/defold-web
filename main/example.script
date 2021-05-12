@@ -144,61 +144,6 @@ local function update_tab1(self)
 	imgui.end_table()
 end
 
-local function update_tab2(self)
-	local selected = imgui.tree_node("root")
-	if selected then
-		imgui.bullet()
-		self.foo_selected = imgui.selectable("foo", self.foo_selected)
-		imgui.bullet()
-		self.bar_selected = imgui.selectable("bar", self.bar_selected)
-		imgui.tree_pop()
-	end
-
-
-	local JEDI = { "Luke", "Anakin", "Yoda" }
-
-	-- this is the old way of creating combo boxes
-	-- it still exists in the ImGUI API since it's a quick way ti create a combo box
-	local changed, jedi = imgui.combo("Jedi##array", self.selected_jedi or 1, JEDI)
-	if changed then
-		self.selected_jedi = jedi
-	end
-
-	-- new way of creating combo boxes with a begin and end function
-	if imgui.begin_combo("Jedi##selectable", "Select a Jedi") then
-		for i=1,#JEDI do
-			if imgui.selectable(JEDI[i], i == (self.selected_jedi or 1)) then
-				self.selected_jedi = i
-			end
-		end
-		imgui.end_combo()
-	end
-end
-
-local function update_tab3(self)
-
-	local changed, checked = imgui.checkbox("Live Data", self.show_live_data)
-	if changed then
-		self.show_live_data = checked
-	end
-
-	if(self.show_live_data == true) then 
-		makeData(self)
-	end
-	imgui.separator()
-
-	imgui.text_colored(" Data Plot ", 1, 0, 0, 1 )
-	imgui.plot_lines( "Data", 0, 150, 40, self.values_line )
-
-	imgui.separator()
-
-	imgui.text_colored(" Data Histogram ", 0, 1, 0, 1 )
-	imgui.plot_histogram( "Histogram", 0, 150, 40, self.values_hist )
-
-	imgui.separator()
-end
-
-
 function update(self, dt)
 	if self.show_demo_window then
 		imgui.demo()
@@ -208,7 +153,15 @@ function update(self, dt)
 		close_window(self)
 	end
 
-	imgui.begin_window("Hello, world!")
+	local flags = bit.bor(imgui.WINDOWFLAGS_NOBACKGROUND, imgui.WINDOWFLAGS_NOTITLEBAR)
+	flags = bit.bor(flags, imgui.WINDOWFLAGS_NORESIZE)
+	flags = bit.bor(flags, imgui.WINDOWFLAGS_NOMOVE)
+
+	local w, h = window.get_size()
+	imgui.set_next_window_size(w, h )
+	imgui.set_next_window_pos( 0, 0 )
+	
+	imgui.begin_window("Hello, world!", true, flags )
 	imgui.begin_tab_bar("tabs")
 
 	local tab1_open = imgui.begin_tab_item("Tab1")
@@ -216,19 +169,6 @@ function update(self, dt)
 		update_tab1(self)
 		imgui.end_tab_item()
 	end
-
-	local tab2_open = imgui.begin_tab_item("Tab2")
-	if tab2_open then
-		update_tab2(self)
-		imgui.end_tab_item()
-	end
-
-	local tab2_open = imgui.begin_tab_item("Tab3")
-	if tab2_open then
-		update_tab3(self)
-		imgui.end_tab_item()
-	end
-
 	imgui.end_tab_bar()
 	imgui.end_window()
 end

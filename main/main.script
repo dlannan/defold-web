@@ -73,6 +73,15 @@ function init(self)
 		wheel = 0,
 		buttons = {},
 	}
+	self.renderCtx = {
+		fontids = {},
+	}
+
+	-- Load a default font 
+	self.renderCtx.fontids["Monserrat"] = imgui.font_add_ttf_file("data/fonts/Montserrat-Regular.ttf", 16.0)
+	self.renderCtx.fontids[0] = self.renderCtx.fontids["Monserrat"]
+
+	imgui.set_style_color(imgui.ImGuiCol_WindowBg, 1.00, 1.00, 1.00, 1.00)
 end
 
 function final(self)
@@ -88,19 +97,33 @@ local bgcolor = { r=0.5, g=0.2, b=0.3, a=1.0 }
 
 function update(self, dt)
 
+
+	local flags = imgui.WINDOWFLAGS_NOTITLEBAR
+	-- flags = bit.bor(flags, imgui.WINDOWFLAGS_NOBACKGROUND)
+	flags = bit.bor(flags, imgui.WINDOWFLAGS_NORESIZE)
+	flags = bit.bor(flags, imgui.WINDOWFLAGS_NOMOVE)
+
+	local w, h = window.get_size()
+	imgui.set_display_size(w, h)
+	
+	imgui.set_next_window_size(w, h )
+	imgui.set_next_window_pos( 0, 0 )
+
+	imgui.begin_window("Main", true, flags )
+	
 -- 	Gcairo:Begin(dt)
 -- 
 -- 	Gcairo:RenderBox(30, 30, 200, 35, 5)
 -- 	Gcairo:RenderText("Web Test V0.1", 50, 55, 20, tcolor )
 -- 
 -- 	Gcairo:RenderBox(0, 90, 1280, 800, 0, {r=1.0, g=1.0, b=1.0, a=1.0})
-	--htmlr.renderxml( renderCtx, self.xmldoc, { left=10, top=100.0 } )
+htmlr.renderxml( self.renderCtx, self.xmldoc, { left=10, top=100.0 } )
+
+imgui.end_window()
+
 -- 	
 -- 	Gcairo:Update(self.mouse.x, self.mouse.y, self.buttons, dt)
 -- 	Gcairo:Render()
-
-	local w, h = window.get_size()
-	imgui.set_display_size(w, h)
 
 	imgui.set_mouse_input(
 	self.mouse.x,

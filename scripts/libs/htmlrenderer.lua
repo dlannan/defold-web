@@ -23,13 +23,13 @@ local stylestack = {}
 stylestack[1] = { textsize = FONT_SIZES.p, linesize = FONT_SIZES.p * 1.5, maxlinesize = 0, width = 0, height = 0 }
 
 ----------------------------------------------------------------------------------
-local function xmlhandler( gcairo, xml )
+local function xmlhandler( ctx, xml )
 
 	local currstyle = stylestack[#stylestack]
 	local style = deepcopy(currstyle)
 
 	if(style.margin == nil) then style.margin = htmle.defaultmargin(style) end
-	local g = { gcairo=gcairo, cursor = cursor, frame = frame }
+	local g = { ctx=ctx, cursor = cursor, frame = frame }
 
 	-- Check element names 
 	local label = nil
@@ -62,7 +62,7 @@ local function xmlhandler( gcairo, xml )
 				end
 
 				if(type(v) == "table") then
-					xmlhandler( gcairo, v ) 
+					xmlhandler( ctx, v ) 
 				end
 			end
 		end
@@ -77,7 +77,7 @@ local function xmlhandler( gcairo, xml )
 end 
 
 ----------------------------------------------------------------------------------
-local function renderxml( gcairo, xmldoc, position )
+local function renderxml( ctx, xmldoc, position )
 
 	frame.top 		= position.top or 0.0
 	frame.left 		= position.left or 0.0
@@ -85,10 +85,8 @@ local function renderxml( gcairo, xmldoc, position )
 	cursor.left 	= frame.left
 
 	htmle.init(frame, cursor)
-	xmlhandler( gcairo, xmldoc )
+	xmlhandler( ctx, xmldoc )
 	htmle.finish()
-	
-	gcairo:FontSetFace(nil,nil,nil)	
 end
 
 ----------------------------------------------------------------------------------
