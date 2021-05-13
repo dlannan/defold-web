@@ -24,3 +24,6 @@ include_dirs = imageloader
 [input]
 game_binding = /input/imgui.input_bindingc
 
+[profiler]
+track_cpu = 1
+

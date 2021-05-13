@@ -860,6 +860,9 @@ static int imgui_SetIniFilename(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 0);
 
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+
     const char *filename = 0;
     if (lua_isstring(L, 1)) {
         filename = luaL_checkstring(L, 1);
@@ -870,7 +873,6 @@ static int imgui_SetIniFilename(lua_State* L)
     return 0;
 }
 
-static ImFontAtlas                fontatlas;
 static std::vector<ImFont *>      fonts;
 static int imgui_FontAddTTFFile(lua_State * L)
 {
@@ -878,11 +880,11 @@ static int imgui_FontAddTTFFile(lua_State * L)
     const char * ttf_filename = luaL_checkstring(L, 1);
     float font_size = luaL_checknumber(L, 2);
 
-    ImFont * font = fontatlas.AddFontFromFileTTF( ttf_filename, font_size );
+    ImGuiIO& io = ImGui::GetIO();
+    ImFont* font = io.Fonts->AddFontFromFileTTF(ttf_filename, font_size);    
     // Put font in map. 
     if(font != NULL) 
     {
-        fontatlas.Build();
         fonts.push_back(font);
         lua_pushinteger(L, fonts.size() - 1);
     }

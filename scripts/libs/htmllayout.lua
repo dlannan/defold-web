@@ -18,7 +18,7 @@ local elements		= {}
 
 local geom 			= nil
 
-local tcolor = { r=0.0, b=1.0, g=0.0, a=1.0 }
+local tcolor = { r=0.0, b=0.0, g=0.0, a=1.0 }
 
 ----------------------------------------------------------------------------------
 
@@ -86,10 +86,15 @@ local function rendertext( g, v )
 	local text 		= v.text
 	local style 	= v.style
 	if(type(text) ~= "string") then return end 
-	imgui.font_push(g.ctx.ctx.fontids[style.fontface or 0]) -- , style.fontstyle, style.fontweight)	
+
+	local fontface = style.fontface or "Regular"
+	if(style.fontweight == 1) then fontface = "Bold" end 
+	if(style.fontstyle == 1) then fontface = "Italic" end 
+
+	imgui.font_push(g.ctx.ctx.fonts[fontface]) -- , style.fontstyle, style.fontweight)	
 	imgui.set_cursor_pos(g.cursor.left, g.cursor.top + style.textsize * 0.75)
-	imgui.set_window_font_scale(style.textsize)
-	imgui.text_colored( text, tcolor.r, tcolor.b, tcolor.g, tcolor.a )
+	imgui.set_window_font_scale(style.textsize/ 20.0)
+	imgui.text_colored( text, tcolor.r, tcolor.g, tcolor.b, tcolor.a )
 	imgui.font_pop()
 end 
 
@@ -101,14 +106,14 @@ local function renderbutton( g, v )
 	local style 	= v.style
 	local ele = getelement( v.eid )
 	-- local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
-	imgui.set_cursor_pos(ele.pos.left, ele.pos.top)
+	imgui.set_cursor_pos(ele.pos.left, ele.pos.top + ele.height)
 	if imgui.button(v.text or "") then
 		-- self.counter = self.counter + 1
 	end
 end 
 
 ----------------------------------------------------------------------------------
-local bgcolor		= { r=1, g=1, b=1, a=0 }
+local bgcolor		= { r=1, g=1, b=1, a=1 }
 local brdrcolor 	= { r=0, g=0, b=0, a=1 }
 local margincolor 	= { r=0, g=0, b=1, a=1 }
 
@@ -232,7 +237,7 @@ local function addtextobject( g, style, text )
 	}
 
 	local pid = getparent(style)
-	if(pid) then print(text, style.width, pid, style.pstyle.etype) end
+	-- if(pid) then print(text, style.width, pid, style.pstyle.etype) end
 	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
