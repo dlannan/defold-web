@@ -95,22 +95,23 @@ local function elementclose( g, style )
 end 
 
 ----------------------------------------------------------------------------------
--- imgui.set_window_font_scale(1.2)
--- imgui.text("This is some useful text.")
 -- 
 local function textdefault( g, style, attribs, text )
 
 	style.etype = "text"
-	local w, h 		= imgui.text_getsize(text)
+	local fontface 	= g.ctx.getstyle(style)
+	local fontscale = style.textsize/g.ctx.fontsize
+	local w, h 		= imgui.text_getsize(text, fontscale, fontface)
+	
 	style.width 	= w
 	style.height 	= h
 	
-	if(style.margin == nil) then print(style.etype) end
+	-- if(style.margin == nil) then print(style.etype) end
 	local element 	= layout.addelement( g, style, attribs )	
 
 	layout.addtextobject( g, style, text )
 
-	g.cursor.left 		= g.cursor.left + w * 16
+	g.cursor.left 	= g.cursor.left + w * g.ctx.fontsize
 	elementclose(g, style)
 end
 ----------------------------------------------------------------------------------

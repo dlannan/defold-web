@@ -49,6 +49,45 @@ for i=1,#IMGUI_KEYS do
 	IMGUI_KEYMAP[hash(key)] = i - 1
 end
 
+function ImGuiSetup(self)
+	local fontsizebase = 26.0
+	local fontsize = 1.0
+
+	-- Load a default font 
+	imgui.set_defaults()
+	self.renderCtx.fonts = {}
+	self.renderCtx.window = { x = 50, y = 50 }
+
+	local regular_data, error = sys.load_resource("/data/fonts/Montserrat-Regular.ttf")
+	self.renderCtx.fonts["Regular"] = imgui.font_add_ttf_data(regular_data, fontsize, fontsizebase)
+	local bold_data, error = sys.load_resource("/data/fonts/Montserrat-Bold.ttf")
+	self.renderCtx.fonts["Bold"] = imgui.font_add_ttf_data(bold_data, fontsize, fontsizebase)
+	local italic_data, error = sys.load_resource("/data/fonts/Montserrat-Italic.ttf")
+	self.renderCtx.fonts["Italic"] = imgui.font_add_ttf_data(italic_data, fontsize, fontsizebase)
+	local bolditalic_data, error = sys.load_resource("/data/fonts/Montserrat-BoldItalic.ttf")
+	self.renderCtx.fonts["BoldItalic"] = imgui.font_add_ttf_data(bolditalic_data, fontsize, fontsizebase)
+	self.renderCtx.fontsize = fontsizebase
+	self.renderCtx.getstyle = function( style )
+		local fontface = style.fontface or "Regular"
+		if(style.fontweight == 1) then fontface = "Bold" end 
+		if(style.fontstyle == 1) then fontface = "Italic" end 
+		if(style.fontstyle == 1 and style.fontweight == 1) then fontface = "BoldItalic" end 
+		return self.renderCtx.fonts[fontface]
+	end 	
+	self.renderCtx.setstyle = function( style )
+		local fontface = self.renderCtx.getstyle(style)
+		imgui.font_push(fontface)
+	end 
+	self.renderCtx.unsetstyle = function()
+		imgui.font_pop()
+	end 
+
+	imgui.set_style_color(imgui.ImGuiCol_WindowBg, 1.00, 1.00, 1.00, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_Text, 0.90, 0.90, 0.90, 0.90)
+	imgui.set_style_color(imgui.ImGuiCol_TextDisabled, 0.60, 0.60, 0.60, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_FrameBg, 1.00, 1.00, 1.00, 1.00)
+end 
+
 
 function init(self)
 	-- Add initialization code here
@@ -77,16 +116,7 @@ function init(self)
 		fontids = {},
 	}
 
-	-- Load a default font 
-	self.renderCtx.fonts = {}
-	self.renderCtx.fonts["Regular"] = imgui.font_add_ttf_file("data/fonts/Montserrat-Regular.ttf", 20.0)
-	self.renderCtx.fonts["Bold"] = imgui.font_add_ttf_file("data/fonts/Montserrat-Bold.ttf", 20.0)
-	self.renderCtx.fonts["Italic"] = imgui.font_add_ttf_file("data/fonts/Montserrat-Italic.ttf", 20.0)
-
-	imgui.set_style_color(imgui.ImGuiCol_WindowBg, 1.00, 1.00, 1.00, 1.00)
-	imgui.set_style_color(imgui.ImGuiCol_Text, 0.90, 0.90, 0.90, 0.90)
-	imgui.set_style_color(imgui.ImGuiCol_TextDisabled, 0.60, 0.60, 0.60, 1.00)
-	imgui.set_style_color(imgui.ImGuiCol_FrameBg, 1.00, 1.00, 1.00, 1.00)
+	ImGuiSetup(self)
 
 	-- Toggle the visual profiler on hot reload.
 	self.profile = true
@@ -104,19 +134,19 @@ local bgcolor = { r=0.5, g=0.2, b=0.3, a=1.0 }
 function update(self, dt)
 
 
--- 	local flags = imgui.WINDOWFLAGS_NOTITLEBAR
--- --	flags = bit.bor(flags, imgui.WINDOWFLAGS_NOBACKGROUND)
-	-- flags = bit.bor(flags, imgui.WINDOWFLAGS_NORESIZE)
-	-- flags = bit.bor(flags, imgui.WINDOWFLAGS_NOMOVE)
+	local flags = imgui.WINDOWFLAGS_NOTITLEBAR
+--	flags = bit.bor(flags, imgui.WINDOWFLAGS_NOBACKGROUND)
+	flags = bit.bor(flags, imgui.WINDOWFLAGS_NORESIZE)
+	flags = bit.bor(flags, imgui.WINDOWFLAGS_NOMOVE)
 
 	local w, h = window.get_size()
 	imgui.set_display_size(w, h)
 	
-	imgui.set_next_window_size(w, h )
-	imgui.set_next_window_pos( 0, 0 )
+	imgui.set_next_window_size(w/2, h/1.5 )
+	imgui.set_next_window_pos( self.renderCtx.window.x, self.renderCtx.window.y )
 
 	imgui.begin_window("Main", true, flags )
-	htmlr.renderxml( self.renderCtx, self.xmldoc, { left=10, top=100.0 } )
+	htmlr.renderxml( self.renderCtx, self.xmldoc, { left=10, top=10.0 } )
 	imgui.end_window()
 
 

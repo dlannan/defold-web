@@ -28,6 +28,7 @@
 static bool g_imgui_NewFrame = false;
 static char* g_imgui_TextBuffer = 0;
 
+static std::vector<ImFont *>      fonts;
 
 static void imgui_NewFrame()
 {
@@ -432,9 +433,13 @@ static int imgui_Text(lua_State* L)
 static int imgui_TextGetSize(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 2);
+    int argc = lua_gettop(L);
     const char* text = luaL_checkstring(L, 1);
-    ImFont *font = ImGui::GetFont();
-    ImVec2 sz = font->CalcTextSizeA(1.0f, FLT_MAX, 0.0f, text);
+    float font_size = luaL_checknumber(L, 2);
+    int fontid = 0;
+    if(argc > 2) fontid = luaL_checkinteger(L, 3);
+    ImFont *font = fonts[fontid];
+    ImVec2 sz = font->CalcTextSizeA(font_size, FLT_MAX, 0.0f, text);
 
     lua_pushnumber(L, sz.x);
     lua_pushnumber(L, sz.y);
@@ -601,9 +606,20 @@ static int imgui_Selectable(lua_State* L)
 static int imgui_Button(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 1);
+    int argc = lua_gettop(L);
     imgui_NewFrame();
     const char* text = luaL_checkstring(L, 1);
-    bool pushed = ImGui::Button(text);
+    bool pushed = false;
+    if(argc > 1) 
+    {
+        int width = luaL_checkinteger(L, 2);
+        int height = luaL_checkinteger(L, 3);
+        pushed = ImGui::Button(text, ImVec2(width, height));
+    }
+    else
+    {
+        pushed = ImGui::Button(text);
+    }
     lua_pushboolean(L, pushed);
     return 1;
 }
@@ -856,13 +872,19 @@ static int imgui_SetCursorPos(lua_State *L)
 // ----------------------------
 // ----- CONFIG -----------------
 // ----------------------------
-static int imgui_SetIniFilename(lua_State* L)
+static int imgui_SetDefaults(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 0);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontDefault();
+    ImFont * def = io.Fonts->AddFontDefault();
+    fonts.push_back(def);
+    return 0;
+}
 
+static int imgui_SetIniFilename(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
     const char *filename = 0;
     if (lua_isstring(L, 1)) {
         filename = luaL_checkstring(L, 1);
@@ -873,7 +895,6 @@ static int imgui_SetIniFilename(lua_State* L)
     return 0;
 }
 
-static std::vector<ImFont *>      fonts;
 static int imgui_FontAddTTFFile(lua_State * L)
 {
     DM_LUA_STACK_CHECK(L, 1);
@@ -882,6 +903,28 @@ static int imgui_FontAddTTFFile(lua_State * L)
 
     ImGuiIO& io = ImGui::GetIO();
     ImFont* font = io.Fonts->AddFontFromFileTTF(ttf_filename, font_size);    
+    // Put font in map. 
+    if(font != NULL) 
+    {
+        fonts.push_back(font);
+        lua_pushinteger(L, fonts.size() - 1);
+    }
+    else 
+    {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+static int imgui_FontAddTTFData(lua_State * L)
+{
+    DM_LUA_STACK_CHECK(L, 1);
+    const char * ttf_data = luaL_checkstring(L, 1);
+    float font_size = luaL_checknumber(L, 2);
+    int font_pixels = luaL_checknumber(L, 3);
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImFont* font = io.Fonts->AddFontFromMemoryTTF((void *)ttf_data, font_size, font_pixels);    
     // Put font in map. 
     if(font != NULL) 
     {
@@ -1026,6 +1069,7 @@ static int imgui_DrawRectFilled(lua_State* L)
 static const luaL_reg Module_methods[] =
 {
     {"font_add_ttf_file", imgui_FontAddTTFFile},
+    {"font_add_ttf_data", imgui_FontAddTTFData},
     {"font_push", imgui_FontPush},
     {"font_pop", imgui_FontPop},
 
@@ -1108,7 +1152,8 @@ static const luaL_reg Module_methods[] =
     {"set_style_color", imgui_SetStyleColor},
 
     {"set_cursor_pos", imgui_SetCursorPos},
-    
+
+    {"set_defaults", imgui_SetDefaults},
     {"set_ini_filename", imgui_SetIniFilename},
 
     {"set_window_font_scale", imgui_SetWindowFontScale},

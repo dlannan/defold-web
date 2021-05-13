@@ -6,6 +6,9 @@ local tremove 	= table.remove
 require("scripts.utils.copy")
 local GM 		= require("scripts.libs.htmlgeom")
 
+-- Set this to show the geom outlines. Doesnt support scrolling at the moment.
+local enableDebug 	= nil
+
 ----------------------------------------------------------------------------------
 -- A html render tree  -- created during first pass
 local render 		= {}
@@ -87,15 +90,13 @@ local function rendertext( g, v )
 	local style 	= v.style
 	if(type(text) ~= "string") then return end 
 
-	local fontface = style.fontface or "Regular"
-	if(style.fontweight == 1) then fontface = "Bold" end 
-	if(style.fontstyle == 1) then fontface = "Italic" end 
-
-	imgui.font_push(g.ctx.ctx.fonts[fontface]) -- , style.fontstyle, style.fontweight)	
-	imgui.set_cursor_pos(g.cursor.left, g.cursor.top + style.textsize * 0.75)
-	imgui.set_window_font_scale(style.textsize/ 20.0)
+	-- This pushes a font!
+	g.ctx.ctx.setstyle(style)
+	imgui.set_cursor_pos(g.cursor.left, g.cursor.top)
+	imgui.set_window_font_scale(style.textsize/g.ctx.ctx.fontsize)
 	imgui.text_colored( text, tcolor.r, tcolor.g, tcolor.b, tcolor.a )
-	imgui.font_pop()
+	-- Always do this when using fontface
+	g.ctx.ctx.unsetstyle()
 end 
 
 ----------------------------------------------------------------------------------
@@ -107,7 +108,7 @@ local function renderbutton( g, v )
 	local ele = getelement( v.eid )
 	-- local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
 	imgui.set_cursor_pos(ele.pos.left, ele.pos.top + ele.height)
-	if imgui.button(v.text or "") then
+	if imgui.button(v.text or "", style.width, style.height ) then
 		-- self.counter = self.counter + 1
 	end
 end 
@@ -131,8 +132,9 @@ local function rendergeom( g, tg )
 
 	-- local ele = getelement( v.eid )
 	-- g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
-	--print("TG:", tg.gid, tg.left, tg.top, tg.width, tg.height)
-	--imgui.draw_rect( tg.left, tg.top, tg.width, tg.height, 0xffffff00) -- , brdrcolor )
+	-- print("TG:", tg.gid, tg.left, tg.top, tg.width, tg.height)
+	local posx, posy = tg.left + g.ctx.ctx.window.x, tg.top + g.ctx.ctx.window.y
+	imgui.draw_rect( posx, posy, tg.width * g.ctx.ctx.fontsize, tg.height * g.ctx.ctx.fontsize, 0xffff0000) -- , brdrcolor )
 	--g.gcairo:RenderText( tostring(tg.gid), tg.left, tg.top, 16, tcolor )
 end	
 ----------------------------------------------------------------------------------
@@ -157,13 +159,15 @@ local function dolayout( )
 -- 		renderelement( g, v)
 -- 	end 
 
-	-- local ele = elements[1]
-	-- local html = geom.geometries[1]
-	-- local g = { ctx = ele.ctx, cursor=ele.cursor, frame = ele.frame }
-	-- for k, v in ipairs(geom.geometries) do 
-	-- 	rendergeom( g, v )
-	-- end
-	-- -- geom.dump()
+	if( enableDebug ) then 
+		local ele = elements[1]
+		local html = geom.geometries[1]
+		local g = { ctx = ele.ctx, cursor=ele.cursor, frame = ele.frame }
+		for k, v in ipairs(geom.geometries) do 
+			rendergeom( g, v )
+		end
+	end
+	-- geom.dump()
 end
 
 ----------------------------------------------------------------------------------

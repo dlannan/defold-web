@@ -14,9 +14,9 @@ input_method = HiddenInputField
 
 [project]
 title = defold_web
-custom_resources = scripts/, data/
+custom_resources = scripts/, data/, imgui/
 bundle_resources = /libs, /data
-dependencies = http://localhost:8000//extension-imgui.zip
+dependencies = 
 
 [library]
 include_dirs = imageloader
