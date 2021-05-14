@@ -91,7 +91,8 @@ local function elementclose( g, style )
 	-- print(element.etype, dim.left, dim.top, dim.width, dim.height)
 	geom.renew( element.gid, dim.left, dim.top, dim.width, dim.height )
 
-	g.cursor.left = g.cursor.left + style.margin.right
+	-- This is not needed?
+	-- g.cursor.left = g.cursor.left + style.margin.right
 end 
 
 ----------------------------------------------------------------------------------
@@ -103,9 +104,9 @@ local function textdefault( g, style, attribs, text )
 	local fontscale = style.textsize/g.ctx.fontsize
 	local w, h 		= imgui.text_getsize(text, fontscale, fontface)
 	
-	style.width 	= w
-	style.height 	= h
-	
+	style.width 	= w * g.ctx.fontsize
+	style.height 	= h * g.ctx.fontsize
+
 	-- if(style.margin == nil) then print(style.etype) end
 	local element 	= layout.addelement( g, style, attribs )	
 
@@ -144,14 +145,15 @@ local function buttonclose( g, style )
 
 	-- Push the size of the element into the button object
 	local element 		= layout.getelement(style.elementid)
-	element.width 		= style.width + element.margin.right  + element.margin.left
-	element.height 		= style.height + element.border.width * 2 + element.margin.top + element.margin.bottom
+--	print(element.pos.left, g.cursor.left, g.cursor.left-element.pos.left)
+	element.width 		= g.cursor.left-element.pos.left + element.margin.left
+	element.height 		= g.cursor.top-element.pos.top + element.border.width * 2 + element.margin.top + element.margin.bottom
 	--layout.updateelement( style.elementid, element )
 
 	local geom = layout.getgeom()
 	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
 
-	g.cursor.left 	= g.cursor.left + style.width + style.margin.right
+	g.cursor.left 	= g.cursor.left + style.margin.right
 	g.cursor.top 	= geom[ element.gid ].top
 	-- Buttons do not modify the top cursor
 	if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
@@ -275,7 +277,7 @@ htmlelements["br"]  = {
 htmlelements["blockquote"] = {
 	opened 		= function( g, style, attribs )
 		style.textsize 		= FONT_SIZES.p
-		style.margin 		= getmargin(style, TEXT_CONST.MARGINS, 40)		
+		style.margin 		= getmargin(style, TEXT_CONST.MARGINS, 40)	-- Dont like this 40 indent is too arbitrary
 		--g.cursor.top = g.cursor.top + style.linesize
 		style.linesize 		= getlineheight(style)
 		elementopen(g, style, attribs)

@@ -7,7 +7,7 @@ require("scripts.utils.copy")
 local GM 		= require("scripts.libs.htmlgeom")
 
 -- Set this to show the geom outlines. Doesnt support scrolling at the moment.
-local enableDebug 	= nil
+local enableDebug 	= 1
 
 ----------------------------------------------------------------------------------
 -- A html render tree  -- created during first pass
@@ -107,8 +107,8 @@ local function renderbutton( g, v )
 	local style 	= v.style
 	local ele = getelement( v.eid )
 	-- local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
-	imgui.set_cursor_pos(ele.pos.left, ele.pos.top + ele.height)
-	if imgui.button(v.text or "", style.width, style.height ) then
+	imgui.set_cursor_pos(ele.pos.left, ele.pos.top)
+	if imgui.button(v.text or "", ele.width, ele.height ) then
 		-- self.counter = self.counter + 1
 	end
 end 
@@ -134,7 +134,7 @@ local function rendergeom( g, tg )
 	-- g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
 	-- print("TG:", tg.gid, tg.left, tg.top, tg.width, tg.height)
 	local posx, posy = tg.left + g.ctx.ctx.window.x, tg.top + g.ctx.ctx.window.y
-	imgui.draw_rect( posx, posy, tg.width * g.ctx.ctx.fontsize, tg.height * g.ctx.ctx.fontsize, 0xffff0000) -- , brdrcolor )
+	imgui.draw_rect( posx, posy, tg.width, tg.height, 0xffff0000) -- , brdrcolor )
 	--g.gcairo:RenderText( tostring(tg.gid), tg.left, tg.top, 16, tcolor )
 end	
 ----------------------------------------------------------------------------------

@@ -172,7 +172,7 @@ geommanager.create 	= function( frame, cursor )
 		g.bottom 	= g.top + g.height
 
 		-- Force a parent update - may need to resize!
-		--geom.traverseup( g )
+		-- geom.traverseup( g )
 		return true
 	end
 
