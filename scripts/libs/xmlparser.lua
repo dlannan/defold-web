@@ -31,6 +31,11 @@ local function collect(s)
         top = stack[#stack]
         table.insert(top, toclose)
       end
+      if(label == "img") then 
+        local toclose = table.remove(stack)  -- remove top
+        top = stack[#stack]
+        table.insert(top, toclose)
+      end
     else  -- end tag
       local toclose = table.remove(stack)  -- remove top
       top = stack[#stack]

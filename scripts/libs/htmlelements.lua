@@ -285,6 +285,19 @@ htmlelements["blockquote"] = {
 	closed 		= defaultclose,
 }
 
+----------------------------------------------------------------------------------
+
+htmlelements["img"]  = {
+	opened 		= function( g, style, attribs )
+		g.cursor.left 		= g.frame.left
+		style.margin 		= getmargin(style, 0, 0)
+
+				-- style.linesize	= getlineheight(style) 
+		--g.cursor.top = g.cursor.top + style.linesize
+		--elementopen(g, style, attribs)
+	end,
+	closed 		= defaultclose,
+}
 
 ----------------------------------------------------------------------------------
 
