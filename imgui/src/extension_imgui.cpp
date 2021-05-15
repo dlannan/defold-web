@@ -126,7 +126,6 @@ static int imgui_ImageAdd( lua_State *L )
     if(tid<0 || tid >=images.size()) 
         return 0;
     ImgObject iobj = images[tid];
-    printf("Image: %d %d %s\n", iobj.w, iobj.h, iobj.name);
     ImGui::Image((void*)(intptr_t)iobj.tid, ImVec2(w, h));
     return 0;
 }
