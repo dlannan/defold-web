@@ -7,7 +7,7 @@ require("scripts.utils.copy")
 local GM 		= require("scripts.libs.htmlgeom")
 
 -- Set this to show the geom outlines. Doesnt support scrolling at the moment.
-local enableDebug 	= 1
+local enableDebug 	= nil
 
 ----------------------------------------------------------------------------------
 -- A html render tree  -- created during first pass
@@ -114,6 +114,18 @@ local function renderbutton( g, v )
 end 
 
 ----------------------------------------------------------------------------------
+
+local function renderimage( g, v )
+
+	local text 		= v.text
+	local style 	= v.style
+	local ele = getelement( v.eid )
+
+	imgui.set_cursor_pos(ele.pos.left, ele.pos.top)
+	imgui.image_add( style.imgid, ele.width, ele.height ) 
+end 
+
+----------------------------------------------------------------------------------
 local bgcolor		= { r=1, g=1, b=1, a=1 }
 local brdrcolor 	= { r=0, g=0, b=0, a=1 }
 local margincolor 	= { r=0, g=0, b=1, a=1 }
@@ -146,8 +158,12 @@ local function dolayout( )
 		local g = { ctx = v.ctx, cursor=v.cursor, frame = v.frame }
 		if( v.etype == "button" ) then 
 			renderbutton(g, v)
-		else 
+		end 
+		if( v.etype == "text" ) then 
 			rendertext(g, v)
+		end
+		if( v.etype == "img" ) then 
+			renderimage(g, v)
 		end
 	end
 
@@ -275,6 +291,31 @@ local function addbuttonobject( g, style )
 	tinsert(render, renderobj)
 end 
 
+
+----------------------------------------------------------------------------------
+
+local function addimageobject( g, style )
+
+	local stylecopy = deepcopy(style)
+
+	-- Try to treat _all_ output as text + style. Style here means a css objects type
+	--    like border, background, size, margin etc
+	local renderobj = { 
+		ctx 	= g, 
+		etype 	= style.etype,
+		eid 	= style.elementid,
+		style 	= stylecopy, 
+		cursor 	= { top = g.cursor.top, left = g.cursor.left },
+		frame  	= { top = g.frame.top, left = g.frame.left },
+	}
+
+	local pid = getparent(style)
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
+	geom.update( renderobj.gid )
+
+	-- Render obejcts are queued in order of the output data with the correct styles
+	tinsert(render, renderobj)
+end 
 ----------------------------------------------------------------------------------
 
 local function addlayout( layout )
@@ -296,6 +337,7 @@ return {
 	
 	addtextobject 	= addtextobject,
 	addbuttonobject	= addbuttonobject,
+	addimageobject	= addimageobject,
 	
 	addlayout 		= addlayout,
 

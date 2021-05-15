@@ -20,65 +20,123 @@
 #include "imgui/imgui_impl_android.h"
 #endif
 #include "imgui/imgui_impl_opengl3.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_STATIC
 #include "imgui/stb_image.h"
 
 #define MAX_HISTOGRAM_VALUES    1000 * 1024     
+#define MAX_IMAGE_NAME          256
 
 #define TEXTBUFFER_SIZE         sizeof(char) * 1000 * 1024
 
 static bool g_imgui_NewFrame        = false;
 static char* g_imgui_TextBuffer     = 0;
 
+// enum
+// {
+//     STBI_default = 0, // only used for desired_channels
+// 
+//     STBI_grey       = 1,
+//     STBI_grey_alpha = 2,
+//     STBI_rgb        = 3,
+//     STBI_rgb_alpha  = 4
+// };
+// 
+// extern unsigned char *stbi_load(char const *filename, int *x, int *y, int *comp, int req_comp);
+// 
 typedef struct ImgObject 
 {
     int                w;
     int                h;
     int                comp;
     GLuint             tid;
+    char               name[MAX_IMAGE_NAME];
     unsigned char *    data;
 } ImgObject;
 
 static std::vector<ImFont *>      fonts;
 static std::vector<ImgObject>     images;
 
+// Image handling needs to be smarter, but this will do for the time being.
 static int imgui_ImageLoad(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 1);
-//     const char * filename = luaL_checkstring(L, 1);
-//     ImgObject     iobj;
-//     iobj.data = stbi_load(filename, &iobj.w, &iobj.h, &iobj.comp, STBI_rgb);
-//     if(iobj.data == nullptr)
-//     {
-//         printf("Error loading image: %s\n", filename);
-//         lua_pushnil(L);
-//         return 1;
-//     }
-//         
-//     glGenTextures(1, &iobj.tid);
-//     glBindTexture(GL_TEXTURE_2D, iobj.tid);
-//     images.push_back(iobj);
-//     
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-// 
-//     if(iobj.comp == 3)
-//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iobj.w, iobj.h, 0, GL_RGB, GL_UNSIGNED_BYTE, iobj.data);
-//     else if(iobj.comp == 4)
-//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, iobj.w, iobj.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, iobj.data);
-// 
-    lua_pushnumber(L, images.size() -1 );
+    const char * filename = luaL_checkstring(L, 1);
+
+    // If its already in the vector, return the id
+    for(int i=0; i<images.size(); i++)
+    {
+        if(strcmp(images[i].name, filename) == 0) 
+        {
+            lua_pushinteger(L, i);
+            return 1;
+        }
+    }
+    
+    ImgObject     iobj;
+    iobj.data = stbi_load(filename, &iobj.w, &iobj.h, NULL, STBI_rgb_alpha);
+    if(iobj.data == nullptr)
+    {
+        printf("Error loading image: %s\n", filename);
+        lua_pushnil(L);
+        return 1;
+    }
+        
+    glGenTextures(1, &iobj.tid);
+    glBindTexture(GL_TEXTURE_2D, iobj.tid);
+
+    strcpy(iobj.name, filename);
+    images.push_back(iobj);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, iobj.w, iobj.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, iobj.data);
+    stbi_image_free(iobj.data);
+    
+    lua_pushinteger(L, images.size()-1);
     return 1;
+}
+
+static int imgui_ImageGet( lua_State *L )
+{
+    DM_LUA_STACK_CHECK(L, 1);
+    int id = luaL_checkinteger(L, 1);
+    if(id>=0 && id <images.size())
+    {
+        if(images[id].tid >= 0)
+            lua_pushinteger(L, id);
+        else 
+            lua_pushnil(L);
+    }
+    else 
+        lua_pushnil(L);
+    return 1;
+}
+
+static int imgui_ImageAdd( lua_State *L )
+{
+    DM_LUA_STACK_CHECK(L, 0);
+    int tid = luaL_checkinteger(L, 1);
+    int w = luaL_checkinteger(L, 2);
+    int h = luaL_checkinteger(L, 3);
+    if(tid<0 || tid >=images.size()) 
+        return 0;
+    ImgObject iobj = images[tid];
+    printf("Image: %d %d %s\n", iobj.w, iobj.h, iobj.name);
+    ImGui::Image((void*)(intptr_t)iobj.tid, ImVec2(w, h));
+    return 0;
 }
 
 static int imgui_ImageFree( lua_State *L )
 {
     DM_LUA_STACK_CHECK(L, 0);
-    // int tid = luaL_checkinteger(L, 1);
-    // assert(tid>=0 && tid <images.size());
-    // ImgObject obj = images[tid];
-    // glBindTexture(GL_TEXTURE_2D, 0);
-    // 
-    // stbi_image_free(iobj.data);
+    int tid = luaL_checkinteger(L, 1);
+    assert(tid>=0 && tid <images.size());
+    images[tid].tid = -1;
     return 0;
 }
 
@@ -1120,8 +1178,10 @@ static int imgui_DrawRectFilled(lua_State* L)
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
 {
-    {"imgui_ImageLoad", imgui_ImageLoad},
-    {"imgui_ImageFree", imgui_ImageFree},
+    {"image_load", imgui_ImageLoad},
+    {"image_get", imgui_ImageGet},
+    {"image_free", imgui_ImageFree},
+    {"image_add", imgui_ImageAdd},
     
     {"font_add_ttf_file", imgui_FontAddTTFFile},
     {"font_add_ttf_data", imgui_FontAddTTFData},

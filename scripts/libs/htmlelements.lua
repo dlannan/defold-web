@@ -291,16 +291,22 @@ htmlelements["blockquote"] = {
 
 htmlelements["img"]  = {
 	opened 		= function( g, style, attribs )
+
+		style.etype 		= "img"
 		g.cursor.left 		= g.frame.left
 		style.margin 		= getmargin(style, 0, 0)
 
-		if(attribs.width) then style.width = width end 
-		if(attribs.height) then style.height = height end 
+		if(attribs.width) then style.width = attribs.width end 
+		if(attribs.height) then style.height = attribs.height end 
+		if(attribs.src) then 
+			style.src = attribs.src
+			style.imgid = style.imgid or imgui.image_load(attribs.src) 
+		end
 
-		elementopen(g, style, attribs)
+		local element 		= layout.addelement( g, style, attribs )
+		layout.addimageobject( g, style )
 		end,
 	closed 		= function( g, style )	
-		pprint(">>>", style)		
 		elementclose(g, style)
 		local element 		= layout.getelement(style.elementid)
 		g.cursor.top = g.cursor.top + element.height
