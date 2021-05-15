@@ -165,7 +165,9 @@ local function defaultclose( g, style )
 	
 	elementclose(g, style)
 	-- Step a line
-	g.cursor.top 	= g.cursor.top + style.linesize
+	local height_step = style.linesize
+	if((style.height or 0) > style.linesize) then height_step = style.height end 
+	g.cursor.top 	= g.cursor.top + height_step
 	local pmargin 	= style.pstyle.margin or 0
 	if(pmargin ~= 0) then pmargin = pmargin.left end
 	-- Return to leftmost + parent margin
@@ -292,11 +294,18 @@ htmlelements["img"]  = {
 		g.cursor.left 		= g.frame.left
 		style.margin 		= getmargin(style, 0, 0)
 
-				-- style.linesize	= getlineheight(style) 
-		--g.cursor.top = g.cursor.top + style.linesize
-		--elementopen(g, style, attribs)
+		if(attribs.width) then style.width = width end 
+		if(attribs.height) then style.height = height end 
+
+		elementopen(g, style, attribs)
+		end,
+	closed 		= function( g, style )	
+		pprint(">>>", style)		
+		elementclose(g, style)
+		local element 		= layout.getelement(style.elementid)
+		g.cursor.top = g.cursor.top + element.height
+		style.fontweight = nil
 	end,
-	closed 		= defaultclose,
 }
 
 ----------------------------------------------------------------------------------

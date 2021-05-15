@@ -142,7 +142,7 @@ function update(self, dt)
 	local w, h = window.get_size()
 	imgui.set_display_size(w, h)
 	
-	imgui.set_next_window_size(w/2, h/1.5 )
+	imgui.set_next_window_size(w/2, h/1.2 )
 	imgui.set_next_window_pos( self.renderCtx.window.x, self.renderCtx.window.y )
 
 	imgui.begin_window("Main", true, flags )

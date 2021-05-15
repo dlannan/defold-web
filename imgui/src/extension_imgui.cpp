@@ -20,15 +20,67 @@
 #include "imgui/imgui_impl_android.h"
 #endif
 #include "imgui/imgui_impl_opengl3.h"
+#include "imgui/stb_image.h"
 
-#define MAX_HISTOGRAM_VALUES        1000 * 1024     
+#define MAX_HISTOGRAM_VALUES    1000 * 1024     
 
-#define TEXTBUFFER_SIZE sizeof(char) * 1000 * 1024
+#define TEXTBUFFER_SIZE         sizeof(char) * 1000 * 1024
 
-static bool g_imgui_NewFrame = false;
-static char* g_imgui_TextBuffer = 0;
+static bool g_imgui_NewFrame        = false;
+static char* g_imgui_TextBuffer     = 0;
+
+typedef struct ImgObject 
+{
+    int                w;
+    int                h;
+    int                comp;
+    GLuint             tid;
+    unsigned char *    data;
+} ImgObject;
 
 static std::vector<ImFont *>      fonts;
+static std::vector<ImgObject>     images;
+
+static int imgui_ImageLoad(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 1);
+//     const char * filename = luaL_checkstring(L, 1);
+//     ImgObject     iobj;
+//     iobj.data = stbi_load(filename, &iobj.w, &iobj.h, &iobj.comp, STBI_rgb);
+//     if(iobj.data == nullptr)
+//     {
+//         printf("Error loading image: %s\n", filename);
+//         lua_pushnil(L);
+//         return 1;
+//     }
+//         
+//     glGenTextures(1, &iobj.tid);
+//     glBindTexture(GL_TEXTURE_2D, iobj.tid);
+//     images.push_back(iobj);
+//     
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+// 
+//     if(iobj.comp == 3)
+//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iobj.w, iobj.h, 0, GL_RGB, GL_UNSIGNED_BYTE, iobj.data);
+//     else if(iobj.comp == 4)
+//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, iobj.w, iobj.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, iobj.data);
+// 
+    lua_pushnumber(L, images.size() -1 );
+    return 1;
+}
+
+static int imgui_ImageFree( lua_State *L )
+{
+    DM_LUA_STACK_CHECK(L, 0);
+    // int tid = luaL_checkinteger(L, 1);
+    // assert(tid>=0 && tid <images.size());
+    // ImgObject obj = images[tid];
+    // glBindTexture(GL_TEXTURE_2D, 0);
+    // 
+    // stbi_image_free(iobj.data);
+    return 0;
+}
 
 static void imgui_NewFrame()
 {
@@ -1068,6 +1120,9 @@ static int imgui_DrawRectFilled(lua_State* L)
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
 {
+    {"imgui_ImageLoad", imgui_ImageLoad},
+    {"imgui_ImageFree", imgui_ImageFree},
+    
     {"font_add_ttf_file", imgui_FontAddTTFFile},
     {"font_add_ttf_data", imgui_FontAddTTFData},
     {"font_push", imgui_FontPush},
