@@ -9,6 +9,7 @@ local tinsert 	= table.insert
 local tremove 	= table.remove
 
 local tcolor = { r=0.0, b=1.0, g=0.0, a=1.0 }
+local rapi 		= require("scripts.libs.htmlrender-api")
 
 ----------------------------------------------------------------------------------
 
@@ -102,7 +103,7 @@ local function textdefault( g, style, attribs, text )
 	style.etype = "text"
 	local fontface 	= g.ctx.getstyle(style)
 	local fontscale = style.textsize/g.ctx.fontsize
-	local w, h 		= imgui.text_getsize(text, fontscale, fontface)
+	local w, h 		= rapi.text_getsize(text, fontscale, fontface)
 	
 	style.width 	= w * g.ctx.fontsize
 	style.height 	= h * g.ctx.fontsize
@@ -300,7 +301,7 @@ htmlelements["img"]  = {
 		if(attribs.height) then style.height = attribs.height end 
 		if(attribs.src) then 
 			style.src = attribs.src
-			style.imgid = style.imgid or imgui.image_load(attribs.src) 
+			style.imgid = style.imgid or rapi.image_load(attribs.src) 
 		end
 
 		local element 		= layout.addelement( g, style, attribs )

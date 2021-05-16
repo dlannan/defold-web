@@ -33,16 +33,10 @@
 static bool g_imgui_NewFrame        = false;
 static char* g_imgui_TextBuffer     = 0;
 
-// enum
-// {
-//     STBI_default = 0, // only used for desired_channels
-// 
-//     STBI_grey       = 1,
-//     STBI_grey_alpha = 2,
-//     STBI_rgb        = 3,
-//     STBI_rgb_alpha  = 4
-// };
-// 
+// ----------------------------
+// ----- IMAGES ---------------
+// ----------------------------
+
 // extern unsigned char *stbi_load(char const *filename, int *x, int *y, int *comp, int req_comp);
 // 
 typedef struct ImgObject 
@@ -138,6 +132,10 @@ static int imgui_ImageFree( lua_State *L )
     images[tid].tid = -1;
     return 0;
 }
+
+// ----------------------------
+// ----- FRAMES ---------------
+// ----------------------------
 
 static void imgui_NewFrame()
 {
