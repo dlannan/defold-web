@@ -192,7 +192,6 @@ end
 ----------------------------------------------------------------------------------
 -- Heading elements 
 
-
 htmlelements["h1"]  = {
 	opened 		= headingopen,
 	closed 		= defaultclose,
@@ -294,7 +293,6 @@ htmlelements["img"]  = {
 	opened 		= function( g, style, attribs )
 
 		style.etype 		= "img"
-		g.cursor.left 		= g.frame.left
 		style.margin 		= getmargin(style, 0, 0)
 
 		if(attribs.width) then style.width = attribs.width end 
@@ -306,12 +304,25 @@ htmlelements["img"]  = {
 
 		local element 		= layout.addelement( g, style, attribs )
 		layout.addimageobject( g, style )
-		end,
+
+		-- Move cursor to first correct top left position
+		g.cursor.top 		= g.cursor.top + element.margin.top
+		g.cursor.left 		= g.cursor.left + element.margin.left
+	end,
+	
 	closed 		= function( g, style )	
-		elementclose(g, style)
+		-- Push the size of the element into the button object
 		local element 		= layout.getelement(style.elementid)
-		g.cursor.top = g.cursor.top + element.height
-		style.fontweight = nil
+		--layout.updateelement( style.elementid, element )
+
+		local geom = layout.getgeom()
+		geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
+
+		g.cursor.left 	= g.cursor.left + element.width + style.margin.right
+		g.cursor.top 	= geom[ element.gid ].top
+		print(type(element.height), type(style.pstyle.linesize))
+		-- Buttons do not modify the top cursor
+		if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
 	end,
 }
 

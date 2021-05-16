@@ -226,8 +226,8 @@ local function addelement( g, style, attribs )
 	element.background 	= { color = style.background or "#aaaaaa" }
 	element.margin 		= { top = style.margin.top or 0, bottom = style.margin.bottom or 0, left = style.margin.left or 0, right = style.margin.right or 0 }
 	element.pos 		= { top = g.cursor.top, left = g.cursor.left }
-	element.width 		= (attribs.width or style.width or 0)
-	element.height 		= (attribs.height or style.height or 0)
+	element.width 		= tonumber(attribs.width or style.width or 0)
+	element.height 		= tonumber(attribs.height or style.height or 0)
 	element.id 			= #elements + 1
 
 	local pid = getparent(style)
