@@ -23,6 +23,8 @@ local FONT_SIZES = {
 	h6 		= 10.0,
 
 	p 		= 14.0,
+	normal	= 12.0,
+	blockquote = 12.0,
 }
 
 ----------------------------------------------------------------------------------
@@ -33,7 +35,8 @@ local TEXT_CONST = {
 	TAB 		= FONT_SIZES.p * 2.0,
 
 	MARGINS 	= 1.0 / 1.1875,
-	HEADINGS 	= 1.0 / 1.8,
+	HEADINGS 	= 0.0,
+	BLOCK		= 0.8,
 }
 
 ----------------------------------------------------------------------------------
@@ -53,14 +56,14 @@ end
 
 ----------------------------------------------------------------------------------
 
-local function getmargin( style, factorrows, sides )
+local function getmargin( style, topbottom, sides )
 
-	local fr = factorrows or 0
+	local fr = topbottom or 0
 	local fs = sides or 0
 	return { 
-		top 	= style.textsize * factorrows, 
-		bottom 	= style.textsize * factorrows,
-		left 	= sides, right = sides 
+		top 	= fr, 
+		bottom 	= fr,
+		left 	= fs, right = fs 
 	}
 end
 
@@ -68,7 +71,9 @@ end
 
 local function getlineheight( style ) 
 
-	return style.textsize + style.margin.top + style.margin.bottom
+	local lh =  style.textsize + style.margin.top + style.margin.bottom
+	if(style.height > lh) then lh = style.height end 
+	return lh
 end
 
 
@@ -100,6 +105,9 @@ end
 -- 
 local function textdefault( g, style, attribs, text )
 
+	-- remove any newlines or tabs from text!
+	text = string.gsub(text, "[\n\r\t]", "")
+	
 	style.etype = "text"
 	local fontface 	= g.ctx.getstyle(style)
 	local fontscale = style.textsize/g.ctx.fontsize
@@ -126,18 +134,18 @@ end
 
 local function buttonopen( g, style, attribs )
 
-	local omargin = style.margin
-	style.margin.top 	= 8
-	style.margin.bottom = 8
-	style.margin.left 	= 8
-	style.margin.right 	= 8 
-	
+	-- local omargin = style.margin
+	style.margin.top 	= 18
+	style.margin.bottom = 18
+	style.margin.left 	= 18
+	style.margin.right 	= 18 
+
 	local element 		= layout.addelement( g, style, attribs )
 	layout.addbuttonobject( g, style )
 
 	-- Move cursor to first correct top left position
-	g.cursor.top 		= g.cursor.top + element.margin.top
-	g.cursor.left 		= g.cursor.left + element.margin.left
+	--g.cursor.top 		= g.cursor.top + element.margin.top
+	--g.cursor.left 		= g.cursor.left + element.margin.left
 end 
 
 ----------------------------------------------------------------------------------
@@ -148,8 +156,8 @@ local function buttonclose( g, style )
 	local element 		= layout.getelement(style.elementid)
 --	print(element.pos.left, g.cursor.left, g.cursor.left-element.pos.left)
 	element.width 		= g.cursor.left-element.pos.left + element.margin.left
-	element.height 		= g.cursor.top-element.pos.top + element.border.width * 2 + element.margin.top + element.margin.bottom
-	--layout.updateelement( style.elementid, element )
+	element.height 		= g.cursor.top-element.pos.top + element.margin.top + element.margin.bottom
+	-- --layout.updateelement( style.elementid, element )
 
 	local geom = layout.getgeom()
 	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
@@ -165,10 +173,10 @@ end
 local function defaultclose( g, style )
 	
 	elementclose(g, style)
+	
 	-- Step a line
-	local height_step = style.linesize
-	if((style.height or 0) > style.linesize) then height_step = style.height end 
-	g.cursor.top 	= g.cursor.top + height_step
+	g.cursor.top 	= g.cursor.top + style.linesize
+	
 	local pmargin 	= style.pstyle.margin or 0
 	if(pmargin ~= 0) then pmargin = pmargin.left end
 	-- Return to leftmost + parent margin
@@ -184,8 +192,8 @@ end
 local function headingopen( g, style, attribs )
 
 	style.textsize 	= FONT_SIZES[string.lower(style.etype)]
-	style.margin 	= getmargin(style, TEXT_CONST.HEADINGS, 2)
-	style.linesize 	= style.textsize + style.margin.top + style.margin.bottom
+	style.margin 	= getmargin(style, TEXT_CONST.HEADINGS, 0)
+	style.linesize 	= getlineheight(style)
 	elementopen(g, style, attribs)
 end	
 
@@ -251,7 +259,7 @@ htmlelements["i"]  = {
 
 htmlelements["b"]  = {
 	opened 		= function( g, style, attribs )
-		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
+		style.margin 		= getmargin(style, 0, 0)
 		style.fontweight 	= 1
 		elementopen(g, style, attribs)
 	end,
@@ -266,10 +274,8 @@ htmlelements["b"]  = {
 htmlelements["br"]  = {
 	opened 		= function( g, style, attribs )
 		g.cursor.left 		= g.frame.left
-		style.margin 		= getmargin(style, 0, 0)
-		-- style.linesize	= getlineheight(style) 
-		--g.cursor.top = g.cursor.top + style.linesize
-		--elementopen(g, style, attribs)
+		--style.margin 		= getmargin(style, 0, 0)
+		style.linesize	= getlineheight(style) 
 	end,
 	closed 		= defaultclose,
 }
@@ -278,9 +284,8 @@ htmlelements["br"]  = {
 
 htmlelements["blockquote"] = {
 	opened 		= function( g, style, attribs )
-		style.textsize 		= FONT_SIZES.p
-		style.margin 		= getmargin(style, TEXT_CONST.MARGINS, 40)	-- Dont like this 40 indent is too arbitrary
-		--g.cursor.top = g.cursor.top + style.linesize
+		style.textsize 		= FONT_SIZES.blockquote
+		style.margin 		= getmargin(style, 16, 40)
 		style.linesize 		= getlineheight(style)
 		elementopen(g, style, attribs)
 	end,

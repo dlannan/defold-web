@@ -21,13 +21,13 @@ render_api.setup = function(self)
 	self.renderCtx.window = { x = 50, y = 50 }
 
 	local regular_data, error = sys.load_resource("/data/fonts/Montserrat-Regular.ttf")
-	self.renderCtx.fonts["Regular"] = imgui.font_add_ttf_data(regular_data, fontsize, fontsizebase)
+	self.renderCtx.fonts["Regular"] = imgui.font_add_ttf_data(regular_data, #regular_data, fontsize, fontsizebase)
 	local bold_data, error = sys.load_resource("/data/fonts/Montserrat-Bold.ttf")
-	self.renderCtx.fonts["Bold"] = imgui.font_add_ttf_data(bold_data, fontsize, fontsizebase)
+	self.renderCtx.fonts["Bold"] = imgui.font_add_ttf_data(bold_data, #bold_data, fontsize, fontsizebase)
 	local italic_data, error = sys.load_resource("/data/fonts/Montserrat-Italic.ttf")
-	self.renderCtx.fonts["Italic"] = imgui.font_add_ttf_data(italic_data, fontsize, fontsizebase)
+	self.renderCtx.fonts["Italic"] = imgui.font_add_ttf_data(italic_data, #italic_data, fontsize, fontsizebase)
 	local bolditalic_data, error = sys.load_resource("/data/fonts/Montserrat-BoldItalic.ttf")
-	self.renderCtx.fonts["BoldItalic"] = imgui.font_add_ttf_data(bolditalic_data, fontsize, fontsizebase)
+	self.renderCtx.fonts["BoldItalic"] = imgui.font_add_ttf_data(bolditalic_data, #bolditalic_data, fontsize, fontsizebase)
 	self.renderCtx.fontsize = fontsizebase
 	self.renderCtx.getstyle = function( style )
 		local fontface = style.fontface or "Regular"

@@ -8,7 +8,7 @@ local GM 		= require("scripts.libs.htmlgeom")
 local rapi 		= require("scripts.libs.htmlrender-api")
 
 -- Set this to show the geom outlines. Doesnt support scrolling at the moment.
-local enableDebug 	= nil
+local enableDebug 	= 1
 
 ----------------------------------------------------------------------------------
 -- A html render tree  -- created during first pass
@@ -90,10 +90,11 @@ local function rendertext( g, v )
 	local text 		= v.text
 	local style 	= v.style
 	if(type(text) ~= "string") then return end 
+	local ele = getelement( v.eid )
 
 	-- This pushes a font!
 	g.ctx.ctx.setstyle(style)
-	rapi.set_cursor_pos(g.cursor.left, g.cursor.top)
+	rapi.set_cursor_pos(ele.pos.left, ele.pos.top + style.margin.top)
 	rapi.set_window_font_scale(style.textsize/g.ctx.ctx.fontsize)
 	rapi.text_colored( text, tcolor.r, tcolor.g, tcolor.b, tcolor.a )
 	-- Always do this when using fontface
@@ -108,7 +109,7 @@ local function renderbutton( g, v )
 	local style 	= v.style
 	local ele = getelement( v.eid )
 	-- local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
-	rapi.set_cursor_pos(ele.pos.left, ele.pos.top)
+	rapi.set_cursor_pos(ele.pos.left + style.margin.left, ele.pos.top + style.margin.top)
 	if rapi.button(v.text or "", ele.width, ele.height ) then
 		-- self.counter = self.counter + 1
 	end
@@ -222,7 +223,7 @@ local function addelement( g, style, attribs )
 	local element = {}
 	element.ctx 		= g
 	element.etype 		= style.etype
-	element.border 		= { width = 2, height = 2 }
+	element.border 		= { width = 0, height = 0 }
 	element.background 	= { color = style.background or "#aaaaaa" }
 	element.margin 		= { top = style.margin.top or 0, bottom = style.margin.bottom or 0, left = style.margin.left or 0, right = style.margin.right or 0 }
 	element.pos 		= { top = g.cursor.top, left = g.cursor.left }
@@ -231,7 +232,10 @@ local function addelement( g, style, attribs )
 	element.id 			= #elements + 1
 
 	local pid = getparent(style)
-	element.gid 		= geom.add( style.etype, pid, element.pos.left, element.pos.top, element.width, element.height )
+	element.gid 		= geom.add( style.etype, pid, 
+				element.pos.left, -- + style.margin.left, 
+				element.pos.top + style.margin.top, 
+				element.width, element.height )
 	geom.update( element.gid )
 	
 	style.elementid 	= element.id
@@ -259,7 +263,9 @@ local function addtextobject( g, style, text )
 
 	local pid = getparent(style)
 	-- if(pid) then print(text, style.width, pid, style.pstyle.etype) end
-	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
+	local sheight 		= style.height + style.margin.top + style.margin.bottom
+	local swidth 		= style.width + style.margin.left + style.margin.right
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, swidth, sheight )
 	geom.update( renderobj.gid )
 		
 	-- Render objects are queued in order of the output data with the correct styles
@@ -273,6 +279,9 @@ local function addbuttonobject( g, style )
 
 	local stylecopy = deepcopy(style)
 
+	-- Copy from the element this button is from 
+	local element = getelement(style.elementid)
+	
 	-- Try to treat _all_ output as text + style. Style here means a css objects type
 	--    like border, background, size, margin etc
 	local renderobj = { 
@@ -280,12 +289,12 @@ local function addbuttonobject( g, style )
 		etype 	= style.etype,
 		eid 	= style.elementid,
 		style 	= stylecopy, 
-		cursor 	= { top = g.cursor.top, left = g.cursor.left },
+		cursor 	= { top = element.pos.top, left = element.pos.left },
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 	
 	local pid = getparent(style)
-	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
+	renderobj.gid 		= geom.add( style.etype, pid, element.pos.left, element.pos.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
 	-- Render obejcts are queued in order of the output data with the correct styles
@@ -311,7 +320,9 @@ local function addimageobject( g, style )
 	}
 
 	local pid = getparent(style)
-	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
+	local sheight 		= style.height + style.margin.top + style.margin.bottom
+	local swidth 		= style.width + style.margin.left + style.margin.right
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, swidth, sheight )
 	geom.update( renderobj.gid )
 
 	-- Render obejcts are queued in order of the output data with the correct styles
