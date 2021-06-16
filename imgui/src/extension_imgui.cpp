@@ -75,7 +75,7 @@ static int imgui_ImageInternalLoad(const char *filename, ImgObject *iobj)
 {
     if(iobj->data == nullptr)
     {
-        printf("Error loading image: %s\n", filename);
+        dmLogError("Error loading image: %s\n", filename);
         return -1;
     }
 
@@ -115,11 +115,11 @@ static int imgui_ImageLoadData(lua_State* L)
     unsigned char *strdata = (unsigned char *)luaL_checkstring(L, 2);
     int lendata = luaL_checkinteger(L, 3);
     iobj.data = stbi_load_from_memory( strdata, lendata, &iobj.w, &iobj.h, NULL, STBI_rgb_alpha);
-    //printf("Loaded Image: %s %d %d \n", filename, iobj.w, iobj.h);
+    //dmLogError("Loaded Image: %s %d %d \n", filename, iobj.w, iobj.h);
     
     if(iobj.data == nullptr)
     {
-        printf("Error loading image: %s\n", filename);
+        dmLogError("Error loading image: %s\n", filename);
         lua_pushnil(L);
         return 1;
     }
@@ -157,7 +157,7 @@ static int imgui_ImageLoad(lua_State* L)
     iobj.data = stbi_load(filename, &iobj.w, &iobj.h, NULL, STBI_rgb_alpha);
     if(iobj.data == nullptr)
     {
-        printf("Error loading image: %s\n", filename);
+        dmLogError("Error loading image: %s\n", filename);
         lua_pushnil(L);
         return 1;
     }
@@ -1411,7 +1411,6 @@ static const luaL_reg Module_methods[] =
     {"set_key_modifier_alt", imgui_SetKeyModifierAlt},
     {"set_key_modifier_super", imgui_SetKeyModifierSuper},
     {"add_input_character", imgui_AddInputCharacter},
-    {"set_display_size", imgui_SetDisplaySize},
 
     {"is_item_clicked", imgui_IsItemClicked},
     {"is_item_hovered", imgui_IsItemHovered},
@@ -1426,11 +1425,11 @@ static const luaL_reg Module_methods[] =
     {"set_style_scrollbar_rounding", imgui_SetStyleScrollbarRounding},
     {"set_style_color", imgui_SetStyleColor},
 
-    {"set_cursor_pos", imgui_SetCursorPos},
-
     {"set_defaults", imgui_SetDefaults},
     {"set_ini_filename", imgui_SetIniFilename},
 
+    {"set_cursor_pos", imgui_SetCursorPos},
+    {"set_display_size", imgui_SetDisplaySize},
     {"set_window_font_scale", imgui_SetWindowFontScale},
 
     {0, 0}

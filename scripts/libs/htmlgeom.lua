@@ -199,7 +199,6 @@ geommanager.create 	= function( frame, cursor )
 		__newindex 	= function( t, k, v )
 			t.geometries[k] = v 
 		end,
-
 		__len 		= function( t )
 			return table.length( t.geometries )
 		end

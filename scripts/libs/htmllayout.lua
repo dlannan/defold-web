@@ -94,7 +94,7 @@ local function rendertext( g, v )
 
 	-- This pushes a font!
 	g.ctx.ctx.setstyle(style)
-	rapi.set_cursor_pos(ele.pos.left, ele.pos.top + style.margin.top)
+	rapi.set_cursor_pos(ele.pos.left, ele.pos.top)
 	rapi.set_window_font_scale(style.textsize/g.ctx.ctx.fontsize)
 	rapi.text_colored( text, tcolor.r, tcolor.g, tcolor.b, tcolor.a )
 	-- Always do this when using fontface
@@ -109,7 +109,7 @@ local function renderbutton( g, v )
 	local style 	= v.style
 	local ele = getelement( v.eid )
 	-- local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
-	rapi.set_cursor_pos(ele.pos.left + style.margin.left, ele.pos.top + style.margin.top)
+	rapi.set_cursor_pos(ele.pos.left, ele.pos.top)
 	if rapi.button(v.text or "", ele.width, ele.height ) then
 		-- self.counter = self.counter + 1
 	end
@@ -220,6 +220,7 @@ end
 local function addelement( g, style, attribs )
 
 	attribs = attribs or { width = style.width, height = style.height }
+	
 	local element = {}
 	element.ctx 		= g
 	element.etype 		= style.etype
@@ -233,9 +234,10 @@ local function addelement( g, style, attribs )
 
 	local pid = getparent(style)
 	element.gid 		= geom.add( style.etype, pid, 
-				element.pos.left, -- + style.margin.left, 
-				element.pos.top + style.margin.top, 
-				element.width, element.height )
+				element.pos.left, 
+				element.pos.top, 
+				element.width, 
+				element.height )
 	geom.update( element.gid )
 	
 	style.elementid 	= element.id
@@ -263,9 +265,7 @@ local function addtextobject( g, style, text )
 
 	local pid = getparent(style)
 	-- if(pid) then print(text, style.width, pid, style.pstyle.etype) end
-	local sheight 		= style.height + style.margin.top + style.margin.bottom
-	local swidth 		= style.width + style.margin.left + style.margin.right
-	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, swidth, sheight )
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
 	-- Render objects are queued in order of the output data with the correct styles
@@ -274,13 +274,10 @@ end
 
 
 ----------------------------------------------------------------------------------
-
+-- Button objects when created are empty and only margin sized.
 local function addbuttonobject( g, style )
 
 	local stylecopy = deepcopy(style)
-
-	-- Copy from the element this button is from 
-	local element = getelement(style.elementid)
 	
 	-- Try to treat _all_ output as text + style. Style here means a css objects type
 	--    like border, background, size, margin etc
@@ -289,12 +286,12 @@ local function addbuttonobject( g, style )
 		etype 	= style.etype,
 		eid 	= style.elementid,
 		style 	= stylecopy, 
-		cursor 	= { top = element.pos.top, left = element.pos.left },
+		cursor 	= { top = g.cursor.top, left = g.cursor.left },
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
 	
 	local pid = getparent(style)
-	renderobj.gid 		= geom.add( style.etype, pid, element.pos.left, element.pos.top, style.width, style.height )
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 		
 	-- Render obejcts are queued in order of the output data with the correct styles
@@ -320,9 +317,7 @@ local function addimageobject( g, style )
 	}
 
 	local pid = getparent(style)
-	local sheight 		= style.height + style.margin.top + style.margin.bottom
-	local swidth 		= style.width + style.margin.left + style.margin.right
-	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, swidth, sheight )
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 
 	-- Render obejcts are queued in order of the output data with the correct styles
