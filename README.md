@@ -44,6 +44,8 @@ Im working on:
 Only tested on Linux, but should work on Windows and OSX. Android and IOS I need to build cairo for them to be usable. 
 
 ## Notes
+
 When running in Defold debug is _very_ slow. This is because of the debug info when calling imgui. Run with release to see proper perf - Ctrl + B.
 Early html testing is passing. Will use W3C html tests to validate pages once the system is stable. 
+
 ---
