@@ -7,7 +7,9 @@ Note: This is for applications only (at the moment).
 This is a new type of web engine. A very simplistic one that will support a number of html5 features.
 Primary layout, elements creation and rendering are done in lua. The rendering system is decoupled, so this could be used in almost any luajit based system.
 
+## Imgui
 The system currently utilises imgui for rendering. 
+[ https://github.com/britzl/extension-imgui ]
 
 ## Libraries
 All of this wouldnt work without some awesome libs:
