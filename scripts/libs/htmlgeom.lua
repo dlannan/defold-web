@@ -66,6 +66,12 @@ geommanager.create 	= function( frame, cursor )
 	geom.frame 				= frame 
 	geom.cursor 			= cursor
 
+	geom.get = function( geomid )
+		if(geomid == nil) then return nil end -- silent fail check returns!
+		local g = geom.geometries[geomid] or nil 
+		return g
+	end 
+	
 	geom.checkgeomchanges = function(pg, g )
 
 		-- Only check first level children (we assume they are done, or will be done later)

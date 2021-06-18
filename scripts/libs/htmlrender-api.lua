@@ -7,6 +7,8 @@ local tremove 		= table.remove
 -- The render api is intended as a render interface that can be replaced
 local render_api 		= {}
 
+local cached_data 		= {}
+
 -----------------------------------------------------------------------------------------------------------------------------------
 -- Setup the rendering context - renderCtx. 
 --   NOTE: This may change - renderCtx islikely to become something else.
@@ -122,7 +124,12 @@ end
 --  load images using the specified interface
 render_api.image_load = function( filename )
 
-	return imgui.image_load(filename) 
+	local cachedid = cached_data[filename]
+	if(cachedid) then return cachedid end
+	local loadeddata = sys.load_resource(filename)
+	cachedid = imgui.image_load_data(filename, loadeddata, #loadeddata) 
+	cached_data[filename] = cachedid
+	return cachedid
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

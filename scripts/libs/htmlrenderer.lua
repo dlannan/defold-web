@@ -20,7 +20,13 @@ local frame = { top = 0.0, left = 0.0 }
 ----------------------------------------------------------------------------------
 
 local stylestack = {}
-stylestack[1] = { textsize = FONT_SIZES.p, linesize = FONT_SIZES.p * 1.5, maxlinesize = 0, width = 0, height = 0 }
+stylestack[1] = { 
+	textsize = FONT_SIZES.p, 
+	linesize = FONT_SIZES.p * 1.5, 
+	maxlinesize = 0, 
+	width = 0, 
+	height = 0 
+}
 
 ----------------------------------------------------------------------------------
 local function xmlhandler( ctx, xml )
@@ -29,6 +35,8 @@ local function xmlhandler( ctx, xml )
 	local style = deepcopy(currstyle)
 
 	if(style.margin == nil) then style.margin = htmle.defaultmargin(style) end
+	if(style.padding == nil) then style.padding = htmle.defaultpadding(style) end
+	if(style.border == nil) then style.border = htmle.defaultborder(style) end
 	local g = { ctx=ctx, cursor = cursor, frame = frame }
 
 	-- Check element names 
@@ -83,6 +91,7 @@ local function renderxml( ctx, xmldoc, position )
 	frame.left 		= position.left or 0.0
 	cursor.top 		= frame.top
 	cursor.left 	= frame.left
+	cursor.element_top = nil
 
 	htmle.init(frame, cursor)
 	xmlhandler( ctx, xmldoc )

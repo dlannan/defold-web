@@ -8,7 +8,7 @@ local GM 		= require("scripts.libs.htmlgeom")
 local rapi 		= require("scripts.libs.htmlrender-api")
 
 -- Set this to show the geom outlines. Doesnt support scrolling at the moment.
-local enableDebug 	= 1
+local enableDebug 	= nil
 
 ----------------------------------------------------------------------------------
 -- A html render tree  -- created during first pass

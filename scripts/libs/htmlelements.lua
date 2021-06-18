@@ -54,6 +54,26 @@ local function defaultmargin( style )
 	}
 end 
 
+local function defaultpadding( style ) 
+
+	return { 
+		top 	= 0, 
+		bottom 	= 0,
+		left 	= 0,
+		right 	= 0,
+	}
+end 
+
+local function defaultborder( style ) 
+
+	return { 
+		top 	= 0, 
+		bottom 	= 0,
+		left 	= 0,
+		right 	= 0,
+	}
+end 
+
 ----------------------------------------------------------------------------------
 
 local function getmargin( style, topbottom, sides )
@@ -67,15 +87,50 @@ local function getmargin( style, topbottom, sides )
 	}
 end
 
+local function checkmargins( g, style )
+
+	-- Check if previous margin is big enough for this style otherwise add difference.
+	local margin 	= style.margin
+	if g.cursor.element_top then 
+		local prev_margin = g.cursor.top - g.cursor.element_top
+		if prev_margin < margin.top then 
+			g.cursor.top = g.cursor.top + (margin.top - prev_margin)
+		end
+		g.cursor.element_top = nil
+	else 
+		g.cursor.top = g.cursor.top + margin.top
+	end
+
+	if g.cursor.element_left then 
+		local prev_margin = g.cursor.left - g.cursor.element_left
+		if prev_margin < margin.left then 
+			g.cursor.left = g.cursor.left + (margin.left - prev_margin)
+		end
+	else 
+		g.cursor.left = g.cursor.left + margin.left
+	end
+end 
+
 ----------------------------------------------------------------------------------
 
 local function getlineheight( style ) 
 
-	local lh =  style.textsize + style.margin.top + style.margin.bottom
+	local lh =  style.textsize
 	if(style.height > lh) then lh = style.height end 
 	return lh
 end
 
+local function stepline( g, style )
+	-- Step a line
+	g.cursor.top 	= g.cursor.top + style.linesize
+	-- Add in the collated margin from the bottom
+	g.cursor.element_top = g.cursor.top
+	g.cursor.top 	= g.cursor.top + style.margin.bottom
+
+	-- Return to leftmost + parent margin
+	g.cursor.left 	= g.frame.left
+	g.cursor.element_left = g.cursor.left
+end 
 
 ----------------------------------------------------------------------------------
 
@@ -129,40 +184,12 @@ local function textnone( g, style, text )
 end 
 
 ----------------------------------------------------------------------------------
-
-local function buttonclose( g, style )
-
-	-- Push the size of the element into the button object
-	local element 		= layout.getelement(style.elementid)
-
-	-- Expand element to cater for inserted elements (element geom should be correct)
---	print(element.pos.left, g.cursor.left, g.cursor.left-element.pos.left)
-
-	element.width 		= g.cursor.left - element.pos.left
-	element.height 		= g.cursor.top - element.pos.top
--- 
-	local geom = layout.getgeom()
-	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
-
-	-- g.cursor.left 	= g.cursor.left + element.width
-	-- g.cursor.top 	= geom[ element.gid ].top
-	-- Buttons do not modify the top cursor
-	if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
-end
-
-----------------------------------------------------------------------------------
 -- Default close always end the line of elements back to the leftmost start position
 local function defaultclose( g, style )
 	
 	elementclose(g, style)
 	
-	-- Step a line
-	g.cursor.top 	= g.cursor.top + style.linesize
-	
-	local pmargin 	= style.pstyle.margin or 0
-	if(pmargin ~= 0) then pmargin = pmargin.left end
-	-- Return to leftmost + parent margin
-	g.cursor.left 	= g.frame.left
+	stepline(g, style)
 end	
 
 local function closenone( g, style )
@@ -174,8 +201,10 @@ end
 local function headingopen( g, style, attribs )
 
 	style.textsize 	= FONT_SIZES[string.lower(style.etype)]
-	style.margin 	= getmargin(style, TEXT_CONST.HEADINGS, 20)
+	style.margin 	= getmargin(style, TEXT_CONST.HEADINGS, 0)
 	style.linesize 	= getlineheight(style)
+
+	checkmargins( g, style )
 	elementopen(g, style, attribs)
 end	
 
@@ -219,6 +248,7 @@ htmlelements["p"]  = {
 		style.textsize 	= FONT_SIZES.p
 		style.margin 	= getmargin(style, TEXT_CONST.MARGINS, 2)
 		style.linesize 	= style.textsize
+		checkmargins( g, style )
 		elementopen(g, style, attribs)
 	end,
 	closed 		= defaultclose,
@@ -242,7 +272,7 @@ htmlelements["b"]  = {
 		style.fontweight 	= 1
 		elementopen(g, style, attribs)
 	end,
-	closed 		= function( g, style )	
+	closed 		= function( g, style )
 		elementclose(g, style)
 		style.fontweight = nil
 	end,
@@ -252,10 +282,12 @@ htmlelements["b"]  = {
 
 htmlelements["br"]  = {
 	opened 		= function( g, style, attribs )
-		g.cursor.left 		= g.frame.left
-		style.linesize	= getlineheight(style) 
+		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
 	end,
-	closed 		= defaultclose,
+	closed 		= function( g, style )
+		defaultclose(g, style)
+		style.pstyle.linesize = getlineheight(style)
+	end,
 }
 
 ----------------------------------------------------------------------------------
@@ -265,6 +297,7 @@ htmlelements["blockquote"] = {
 		style.textsize 		= FONT_SIZES.blockquote
 		style.margin 		= getmargin(style, TEXT_CONST.MARGINS, 40)
 		style.linesize 		= getlineheight(style)
+		checkmargins( g, style )
 		elementopen(g, style, attribs)
 	end,
 	closed 		= defaultclose,
@@ -284,12 +317,10 @@ htmlelements["img"]  = {
 			style.imgid = style.imgid or rapi.image_load(attribs.src) 
 		end
 
+		--checkmargins( g, style )
+		
 		local element 		= layout.addelement( g, style, attribs )
 		layout.addimageobject( g, style )
-
-		-- Move cursor to first correct top left position
-		-- g.cursor.top 		= g.cursor.top + element.margin.top
-		-- g.cursor.left 		= g.cursor.left + element.margin.left
 	end,
 	
 	closed 		= function( g, style )	
@@ -300,10 +331,11 @@ htmlelements["img"]  = {
 		local geom = layout.getgeom()
 		geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
 
+		-- Return to leftmost + parent margin
 		g.cursor.left 	= g.cursor.left + element.width
+		g.cursor.element_left = g.cursor.left
+		
 		-- g.cursor.top 	= geom[ element.gid ].top
-		print(type(element.height), type(style.pstyle.linesize))
-		-- Buttons do not modify the top cursor
 		if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
 	end,
 }
@@ -314,11 +346,21 @@ htmlelements["button"] = {
 	opened 		= function( g, style, attribs )
 
 		-- local omargin = style.margin
-		style.margin.top 	= 18
-		style.margin.bottom = 18
-		style.margin.left 	= 18
-		style.margin.right 	= 18 
+		style.margin.top 	= 0
+		style.margin.bottom = 0
+		style.margin.left 	= 0
+		style.margin.right 	= 0 
 
+		style.padding.top 	= 0
+		style.padding.bottom = 0
+		style.padding.left 	= 8
+		style.padding.right = 8 
+
+		style.border.top 	= 5
+		style.border.bottom = 5
+		style.border.left 	= 17
+		style.border.right 	= 17 
+		
 		-- A button is inserted as an "empty" div which is expanded as elements are added.
 		local element 		= layout.addelement( g, style, attribs )
 		style.elementid 	= element.id
@@ -326,7 +368,20 @@ htmlelements["button"] = {
 
 		layout.addbuttonobject( g, style )
 	end,
-	closed 		= buttonclose,
+	closed 		= function( g, style )
+
+		-- Push the size of the element into the button object
+		local element 		= layout.getelement(style.elementid)
+		local geom 			= layout.getgeom()
+		local obj 			= geom.get( element.gid )
+		
+		element.width 		= obj.width
+		element.height 		= obj.height
+
+		geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
+
+		if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
+	end,
 }
 
 ----------------------------------------------------------------------------------
@@ -361,6 +416,8 @@ return {
 	addtextobject 	= textdefault,
 
 	defaultmargin	= defaultmargin,
+	defaultpadding	= defaultpadding,
+	defaultborder	= defaultborder,
 	
 	elements 		= htmlelements, 
 	init			= layout.init,
