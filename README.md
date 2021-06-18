@@ -1,12 +1,13 @@
 # Web UI for Defold
 
-Note: This is for applications only (at the moment). Web deployment may be possible - to be investigated.
+Note: This is for applications only (at the moment). 
+* Web deployment may be possible - Yes it works. defold-web now works within the web as well. 
+* Android, Linux, Win10 and HTML all appear to be working well - your milage may vary on platforms, only sample testing has been done.
 
-This is a new type of web enginer. A very simplistic one that will support a number of html5 features.
+This is a new type of web engine. A very simplistic one that will support a number of html5 features.
+Primary layout, elements and rendering is done in lua. The rendering system is decoupled, so this could be used in almost any luajit based system.
 
-The system utilises imgui for rendering. 
-
-The current systems use a state manager to control the flow of UI execution. This is _not_ required. This is to make building GUI applications a little easier and it maps in nicely to Defold state processes.
+The system currently utilises imgui for rendering. 
 
 ## Libraries
 All of this wouldnt work without some awesome libs:
