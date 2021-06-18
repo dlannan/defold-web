@@ -10,13 +10,17 @@ The current systems use a state manager to control the flow of UI execution. Thi
 
 ## Libraries
 All of this wouldnt work without some awesome libs:
-- ImageLoader Extension for Defold   [ https://github.com/Lerg/extension-imageloader ]
 - xml2lua for Svg loading   [ https://github.com/manoelcampos/xml2lua ]
 - feather icons   [ https://feathericons.com/ ]
 
 If I have missed anyone, please let me know. 
 
 ## Development
+June 2021:
+- imgui being improved to support fonts and images
+- rewrote the layout system. Now uses a correct margin calc - still not ideal, but much better.
+- Image buttons added.
+
 May 2021:
 Many changes 
 - No more cairo. Replaced with imgui extension from defold (modified)
@@ -37,5 +41,6 @@ Im working on:
 Only tested on Linux, but should work on Windows and OSX. Android and IOS I need to build cairo for them to be usable. 
 
 ## Notes
-Performance is based on defold-cairo, so it will get better once caching and layering is added.
+When running in Defold debug is _very_ slow. This is because of the debug info when calling imgui. Run with release to see proper perf - Ctrl + B.
+Early html testing is passing. Will use W3C html tests to validate pages once the system is stable. 
 ---
