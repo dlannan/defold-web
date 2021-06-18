@@ -5,7 +5,7 @@ Note: This is for applications only (at the moment).
 * Android, Linux, Win10 and HTML all appear to be working well - your mileage may vary on platforms, only sample testing has been done.
 
 This is a new type of web engine. A very simplistic one that will support a number of html5 features.
-Primary layout, elements and rendering is done in lua. The rendering system is decoupled, so this could be used in almost any luajit based system.
+Primary layout, elements creation and rendering are done in lua. The rendering system is decoupled, so this could be used in almost any luajit based system.
 
 The system currently utilises imgui for rendering. 
 
