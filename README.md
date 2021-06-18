@@ -2,7 +2,7 @@
 
 Note: This is for applications only (at the moment). 
 * Web deployment may be possible - Yes it works. defold-web now works within the web as well. 
-* Android, Linux, Win10 and HTML all appear to be working well - your milage may vary on platforms, only sample testing has been done.
+* Android, Linux, Win10 and HTML all appear to be working well - your mileage may vary on platforms, only sample testing has been done.
 
 This is a new type of web engine. A very simplistic one that will support a number of html5 features.
 Primary layout, elements and rendering is done in lua. The rendering system is decoupled, so this could be used in almost any luajit based system.
