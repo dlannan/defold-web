@@ -14,7 +14,7 @@ local cached_data 		= {}
 --   NOTE: This may change - renderCtx islikely to become something else.
 
 render_api.setup = function(self)
-	local fontsizebase = 26.0
+	local fontsizebase = 30.0
 	local fontsize = 1.0
 
 	-- Load a default font 
@@ -22,13 +22,14 @@ render_api.setup = function(self)
 	self.renderCtx.fonts = {}
 	self.renderCtx.window = { x = 50, y = 50 }
 
-	local regular_data, error = sys.load_resource("/data/fonts/Montserrat-Regular.ttf")
+	-- TODO: Make font management much simpler (need a font manager)
+	local regular_data, error = sys.load_resource("/data/fonts/LiberationSerif-Regular.ttf")
 	self.renderCtx.fonts["Regular"] = imgui.font_add_ttf_data(regular_data, #regular_data, fontsize, fontsizebase)
-	local bold_data, error = sys.load_resource("/data/fonts/Montserrat-Bold.ttf")
+	local bold_data, error = sys.load_resource("/data/fonts/LiberationSerif-Bold.ttf")
 	self.renderCtx.fonts["Bold"] = imgui.font_add_ttf_data(bold_data, #bold_data, fontsize, fontsizebase)
-	local italic_data, error = sys.load_resource("/data/fonts/Montserrat-Italic.ttf")
+	local italic_data, error = sys.load_resource("/data/fonts/LiberationSerif-Italic.ttf")
 	self.renderCtx.fonts["Italic"] = imgui.font_add_ttf_data(italic_data, #italic_data, fontsize, fontsizebase)
-	local bolditalic_data, error = sys.load_resource("/data/fonts/Montserrat-BoldItalic.ttf")
+	local bolditalic_data, error = sys.load_resource("/data/fonts/LiberationSerif-BoldItalic.ttf")
 	self.renderCtx.fonts["BoldItalic"] = imgui.font_add_ttf_data(bolditalic_data, #bolditalic_data, fontsize, fontsizebase)
 	self.renderCtx.fontsize = fontsizebase
 	self.renderCtx.getstyle = function( style )
