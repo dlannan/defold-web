@@ -19,6 +19,7 @@ render_api.setup = function(self)
 
 	-- Load a default font 
 	imgui.set_defaults()
+	
 	self.renderCtx.fonts = {}
 	self.renderCtx.window = { x = 50, y = 50 }
 
@@ -89,9 +90,9 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 --  Get the size of the text - returns width, and height
-render_api.text_getsize = function( text, fontscale, fontface )
+render_api.text_getsize = function( text, fontscale, fontface, wrap_size )
 
-	return imgui.text_getsize(text, fontscale, fontface)
+	return imgui.text_getsize(text, fontscale, fontface, wrap_size)
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

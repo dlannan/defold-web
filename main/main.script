@@ -79,6 +79,7 @@ function init(self)
 	}
 
 	rapi.setup(self)
+	htmlr.rendersize()
 
 	-- Toggle the visual profiler on hot reload.
 	self.profile = true

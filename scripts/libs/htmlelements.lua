@@ -164,7 +164,8 @@ local function textdefault( g, style, attribs, text )
 	style.etype = "text"
 	local fontface 	= g.ctx.getstyle(style)
 	local fontscale = style.textsize/g.ctx.fontsize
-	local w, h 		= rapi.text_getsize(text, fontscale, fontface)
+	local wrapwidth = g.frame.width - g.cursor.left
+	local w, h 		= rapi.text_getsize(text, fontscale, fontface, wrapwidth)
 	
 	style.width 	= w * g.ctx.fontsize
 	style.height 	= h * g.ctx.fontsize

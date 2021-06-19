@@ -15,7 +15,7 @@ local FONT_SIZES 	= htmle.FONT_SIZES
 ----------------------------------------------------------------------------------
 
 local cursor = { top = 0.0, left = 0.0 }
-local frame = { top = 0.0, left = 0.0 }
+local frame = { top = 0.0, left = 0.0, width = 0.0, height = 0.0 }
 
 ----------------------------------------------------------------------------------
 
@@ -99,7 +99,16 @@ local function renderxml( ctx, xmldoc, position )
 end
 
 ----------------------------------------------------------------------------------
+local function rendersize( )
 
-return { renderxml = renderxml }
+	frame.width, frame.height 		= window.get_size()
+end
+
+----------------------------------------------------------------------------------
+
+return { 
+	renderxml = renderxml,
+	rendersize = rendersize,
+}
 
 ----------------------------------------------------------------------------------
