@@ -634,9 +634,14 @@ static int imgui_TextGetSize(lua_State* L)
     const char* text = luaL_checkstring(L, 1);
     float font_size = luaL_checknumber(L, 2);
     int fontid = 0;
+    float max_width = FLT_MAX;
+    float wrap_width = 0.0f;
+
     if(argc > 2) fontid = luaL_checkinteger(L, 3);
+    if(argc > 3) wrap_width = luaL_checknumber(L, 4);
+
     ImFont *font = fonts[fontid];
-    ImVec2 sz = font->CalcTextSizeA(font_size, FLT_MAX, 0.0f, text);
+    ImVec2 sz = font->CalcTextSizeA(font_size, max_width, wrap_width, text);
 
     lua_pushnumber(L, sz.x);
     lua_pushnumber(L, sz.y);

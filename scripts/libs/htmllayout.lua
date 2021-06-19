@@ -96,7 +96,7 @@ local function rendertext( g, v )
 	g.ctx.ctx.setstyle(style)
 	rapi.set_cursor_pos(ele.pos.left, ele.pos.top)
 	rapi.set_window_font_scale(style.textsize/g.ctx.ctx.fontsize)
-	rapi.text_colored( text, tcolor.r, tcolor.g, tcolor.b, tcolor.a )
+	rapi.text( text, 1 )
 	-- Always do this when using fontface
 	g.ctx.ctx.unsetstyle()
 end 
