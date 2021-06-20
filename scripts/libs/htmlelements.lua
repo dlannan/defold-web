@@ -164,19 +164,24 @@ local function textdefault( g, style, attribs, text )
 	style.etype = "text"
 	local fontface 	= g.ctx.getstyle(style)
 	local fontscale = style.textsize/g.ctx.fontsize
-	local wrapwidth = g.frame.width - g.cursor.left
+	local wrapwidth = (g.frame.width - g.cursor.left) / g.ctx.fontsize
 	local w, h 		= rapi.text_getsize(text, fontscale, fontface, wrapwidth)
 	
 	style.width 	= w * g.ctx.fontsize
 	style.height 	= h * g.ctx.fontsize
 
-	-- if(style.margin == nil) then print(style.etype) end
 	local element 	= layout.addelement( g, style, attribs )	
 
-	layout.addtextobject( g, style, text )
-
+	if(style.linesize < style.height) then style.linesize = style.height end 
+	
+	layout.addtextobject( g, style, text )	
 	g.cursor.left 	= g.cursor.left + style.width 
 	elementclose(g, style)
+
+	if(style.height + style.margin.bottom > style.pstyle.linesize) then 
+		style.pstyle.linesize  = style.height
+		g.cursor.element_top = g.cursor.top + style.height 
+	end
 end
 ----------------------------------------------------------------------------------
 
@@ -188,8 +193,7 @@ end
 -- Default close always end the line of elements back to the leftmost start position
 local function defaultclose( g, style )
 	
-	elementclose(g, style)
-	
+	elementclose(g, style)	
 	stepline(g, style)
 end	
 
@@ -204,6 +208,7 @@ local function headingopen( g, style, attribs )
 	style.textsize 	= FONT_SIZES[string.lower(style.etype)]
 	style.margin 	= getmargin(style, TEXT_CONST.HEADINGS, 0)
 	style.linesize 	= getlineheight(style)
+	style.fontweight = 1
 
 	checkmargins( g, style )
 	elementopen(g, style, attribs)
