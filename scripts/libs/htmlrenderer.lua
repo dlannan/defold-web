@@ -19,14 +19,22 @@ local frame = { top = 0.0, left = 0.0, width = 0.0, height = 0.0 }
 
 ----------------------------------------------------------------------------------
 
-local stylestack = {}
-stylestack[1] = { 
+local styleempty = { 
 	textsize = FONT_SIZES.p, 
 	linesize = FONT_SIZES.p * 1.5, 
 	maxlinesize = 0, 
 	width = 0, 
 	height = 0 
 }
+
+local stylestack = {}
+stylestack[1] = deepcopy(styleempty)
+
+
+----------------------------------------------------------------------------------
+local function stylenone(  )
+	return deepcopy(styleempty)
+end 
 
 ----------------------------------------------------------------------------------
 local function xmlhandler( ctx, xml )
@@ -109,6 +117,7 @@ end
 return { 
 	renderxml = renderxml,
 	rendersize = rendersize,
+	stylenone = stylenone,
 }
 
 ----------------------------------------------------------------------------------

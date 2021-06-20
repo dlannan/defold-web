@@ -8,7 +8,8 @@ local GM 		= require("scripts.libs.htmlgeom")
 local rapi 		= require("scripts.libs.htmlrender-api")
 
 -- Set this to show the geom outlines. Doesnt support scrolling at the moment.
-local enableDebug 	= nil
+local enableDebug 			= 1
+local enableDebugElements 	= nil
 
 ----------------------------------------------------------------------------------
 -- A html render tree  -- created during first pass
@@ -132,14 +133,18 @@ local bgcolor		= { r=1, g=1, b=1, a=1 }
 local brdrcolor 	= { r=0, g=0, b=0, a=1 }
 local margincolor 	= { r=0, g=0, b=1, a=1 }
 
-local function renderelement( g, ele) 
+local function renderelement( g, ele ) 
 
 	-- local ele = getelement( v.eid )
 	-- g.gcairo:RenderBox( ele.pos.left, ele.pos.top, ele.width, ele.height, 0, bgcolor, brdrcolor )
-	local tg = geom.geometries[ele.gid]
 	--print("TG:", tg.left, tg.top, tg.width, tg.height)
-	g.gcairo:RenderBox( tg.left, tg.top, tg.width, tg.height, 0, bgcolor, brdrcolor )
-	g.gcairo:RenderText( tostring(tg.gid), tg.left, tg.top, 16, tcolor )
+	rapi.draw_rect( ele.pos.left, ele.pos.top, ele.width, ele.height, 0x000033ff) -- , brdrcolor )
+
+	g.ctx.ctx.setstyle(style)
+	rapi.set_cursor_pos(tg.left, tg.top)
+	rapi.set_window_font_scale( 0.5 )
+	rapi.text( tostring(tg.gid) )
+	g.ctx.ctx.unsetstyle()
 end	
 
 local function rendergeom( g, tg ) 
@@ -169,15 +174,18 @@ local function dolayout( )
 		end
 	end
 
-	-- Just dump all the element layouts as boxes
--- 	for k, v in pairs( elements ) do 
--- 
--- 		local g = { ctx = v.ctx, cursor=v.cursor, frame = v.frame }
--- 		-- Render a box around all elements 
--- 		renderelement( g, v)
--- 	end 
-
 	if( enableDebug ) then 
+
+		if( enableDebugElements ) then 
+			-- Just dump all the element layouts as boxes
+			for k, v in pairs( elements ) do 
+
+				local g = { ctx = v.ctx, cursor=v.cursor, frame = v.frame }
+				-- Render a box around all elements 
+				renderelement( g, v)
+			end 
+		end 
+		
 		local ele = elements[1]
 		local html = geom.geometries[1]
 		local g = { ctx = ele.ctx, cursor=ele.cursor, frame = ele.frame }
