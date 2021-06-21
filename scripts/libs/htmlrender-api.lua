@@ -111,9 +111,9 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 --  Render text using the specified interface
-render_api.text = function( text )
+render_api.text = function( text, wrapwidth )
 
-	imgui.text( text, 1 )
+	imgui.text( text, wrapwidth )
 end
 
 

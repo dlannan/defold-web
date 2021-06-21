@@ -107,9 +107,9 @@ local function renderxml( ctx, xmldoc, position )
 end
 
 ----------------------------------------------------------------------------------
-local function rendersize( )
+local function rendersize( x, y )
 
-	frame.width, frame.height 		= window.get_size()
+	frame.width, frame.height 		= x, y
 end
 
 ----------------------------------------------------------------------------------

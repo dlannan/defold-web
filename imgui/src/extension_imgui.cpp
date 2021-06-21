@@ -617,11 +617,14 @@ static int imgui_Text(lua_State* L)
     DM_LUA_STACK_CHECK(L, 0);
     imgui_NewFrame();
     const char* text = luaL_checkstring(L, 1);
-    int wrapped =  0;
+    int wrapped =  0.0f;
     if(lua_isnumber(L, 2)) wrapped = luaL_checknumber(L, 2);
 
-    if(wrapped == 1)
+    if(wrapped > 0.0f) {
+        ImGui::PushTextWrapPos(wrapped); 
         ImGui::TextWrapped("%s", text);
+        ImGui::PopTextWrapPos();
+    }
     else
         ImGui::Text("%s", text);
     return 0;
