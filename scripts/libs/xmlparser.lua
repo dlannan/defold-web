@@ -1,5 +1,12 @@
 -- Derived from the XML parser here: http://lua-users.org/wiki/LuaXml
 
+-- No close tags 
+local no_close_tags = {
+  ["br"]     = true,
+  ["img"]    = true,
+  ["input"]  = true,
+}
+
 local function parseargs(s)
   local arg = {}
   string.gsub(s, "([%-%w:_]+)=([\"'])(.-)%2", function (w, _, a)
@@ -26,12 +33,7 @@ local function collect(s)
     elseif c == "" then   -- start tag
       top = {label=label, xarg=parseargs(xarg)}
       table.insert(stack, top)   -- new level
-      if(label == "br") then 
-        local toclose = table.remove(stack)  -- remove top
-        top = stack[#stack]
-        table.insert(top, toclose)
-      end
-      if(label == "img") then 
+      if(no_close_tags[label]) then 
         local toclose = table.remove(stack)  -- remove top
         top = stack[#stack]
         table.insert(top, toclose)

@@ -87,7 +87,7 @@ local function xmlhandler( ctx, xml )
 	-- Check label to close the element
 	if(label) then 
 		local iselement = htmlelements[xml.label]
-		if(iselement) then iselement.closed( g, style ) end 
+		if(iselement and iselement.closed) then iselement.closed( g, style ) end 
 		tremove( stylestack ) 
 	end
 end 

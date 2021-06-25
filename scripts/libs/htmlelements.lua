@@ -87,6 +87,48 @@ local function getmargin( style, topbottom, sides )
 	}
 end
 
+----------------------------------------------------------------------------------
+
+local function style_setmargins( style, left, top, right, bottom)
+	style.margin.top 	= top
+	style.margin.bottom = bottom
+	style.margin.left 	= left
+	style.margin.right 	= right
+end
+
+----------------------------------------------------------------------------------
+
+local function gettextsize( g, style, text )
+	local fontface 	= g.ctx.getstyle(style)
+	local fontscale = style.textsize/g.ctx.fontsize
+	local wrapwidth = (g.frame.width - g.cursor.left - style.margin.right) / (g.ctx.fontsize )
+	local w, h 		= rapi.text_getsize(text, fontscale, fontface, wrapwidth)
+
+	style.width 	= w * g.ctx.fontsize
+	style.height 	= h * g.ctx.fontsize
+	return w, h
+end
+
+----------------------------------------------------------------------------------
+
+local function style_setpadding( style, left, top, right, bottom)
+	style.padding.top 	= top
+	style.padding.bottom = bottom
+	style.padding.left 	= left
+	style.padding.right 	= right
+end
+
+----------------------------------------------------------------------------------
+
+local function style_setborders( style, left, top, right, bottom)
+	style.border.top 	= top
+	style.border.bottom = bottom
+	style.border.left 	= left
+	style.border.right 	= right
+end
+
+----------------------------------------------------------------------------------
+
 local function checkmargins( g, style )
 
 	-- Check if previous margin is big enough for this style otherwise add difference.
@@ -140,6 +182,7 @@ local function elementopen( g, style, attribs )
 	style.elementid 	= element.id
 	element.cursor_top 	= g.cursor.top
 	--g.cursor.left = g.cursor.left + element.margin.left
+	return element
 end 
 
 ----------------------------------------------------------------------------------
@@ -162,14 +205,7 @@ local function textdefault( g, style, attribs, text )
 	text = string.gsub(text, "[\n\r\t]", "")
 	
 	style.etype = "text"
-	local fontface 	= g.ctx.getstyle(style)
-	local fontscale = style.textsize/g.ctx.fontsize
-	local wrapwidth = (g.frame.width - g.cursor.left - style.margin.right) / (g.ctx.fontsize )
-	local w, h 		= rapi.text_getsize(text, fontscale, fontface, wrapwidth)
-	
-	style.width 	= w * g.ctx.fontsize
-	style.height 	= h * g.ctx.fontsize
-
+	gettextsize(g, style, text) 
 	local element 	= layout.addelement( g, style, attribs )	
 
 	if(style.linesize < style.height) then style.linesize = style.height end 
@@ -289,11 +325,10 @@ htmlelements["b"]  = {
 htmlelements["br"]  = {
 	opened 		= function( g, style, attribs )
 		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
-	end,
-	closed 		= function( g, style )
-		defaultclose(g, style)
 		style.pstyle.linesize = getlineheight(style)
+		defaultclose(g, style)
 	end,
+	closed 		= nil,
 }
 
 ----------------------------------------------------------------------------------
@@ -351,27 +386,12 @@ htmlelements["img"]  = {
 htmlelements["button"] = {
 	opened 		= function( g, style, attribs )
 
-		-- local omargin = style.margin
-		style.margin.top 	= 0
-		style.margin.bottom = 0
-		style.margin.left 	= 0
-		style.margin.right 	= 0 
-
-		style.padding.top 	= 0
-		style.padding.bottom = 0
-		style.padding.left 	= 8
-		style.padding.right = 8 
-
-		style.border.top 	= 5
-		style.border.bottom = 5
-		style.border.left 	= 17
-		style.border.right 	= 17 
+		style_setmargins(style, 0, 0, 0, 0)
+		style_setpadding(style, 8, 0, 8, 0)
+		style_setborders(style, 17, 5, 17, 5)
 		
 		-- A button is inserted as an "empty" div which is expanded as elements are added.
-		local element 		= layout.addelement( g, style, attribs )
-		style.elementid 	= element.id
-		element.cursor_top 	= g.cursor.top
-
+		elementopen(g, style, attribs)
 		layout.addbuttonobject( g, style )
 	end,
 	closed 		= function( g, style )
@@ -388,6 +408,55 @@ htmlelements["button"] = {
 
 		if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
 	end,
+}
+
+----------------------------------------------------------------------------------
+
+htmlelements["form"] = {
+	opened 		= function (g, style, attribs) 
+		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
+		elementopen(g, style, attribs)
+	end, 
+	closed 		= defaultclose,
+}
+
+----------------------------------------------------------------------------------
+
+htmlelements["label"] = {
+	opened 		= elementopen,
+	closed 		= function() end ,
+}
+
+----------------------------------------------------------------------------------
+
+htmlelements["input"] = {
+	opened 		= function (g, style, attribs) 
+		style_setmargins(style, 0, 0, 0, 0)
+		style_setpadding(style, 8, 0, 8, 0)
+		style_setborders(style, 1, 1, 1, 1)
+
+		style.textsize 		= FONT_SIZES.p
+		
+		-- Get the correct text size for the button
+		local w, h = gettextsize(g, style, attribs.value or "") 
+		if(attribs.type == "text") then 
+			style.width = 160.0
+			style.height = h + style.margin.top + style.margin.bottom
+		end
+		style.linesize 		= style.height
+				
+		-- A button is inserted as an "empty" div which is expanded as elements are added.		
+		local element = elementopen(g, style, attribs)
+		if(attribs.type == "button" or attribs.type == "submit") then 
+			layout.addbuttonobject( g, style, attribs )
+		end
+		if(attribs.type == "text") then 
+			layout.addinputtextobject( g, style, attribs )
+		end
+
+		if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
+	end, 
+	closed 		= nil,
 }
 
 ----------------------------------------------------------------------------------
@@ -410,7 +479,7 @@ htmlelements["head"] = {
 	opened 		= function(g, style, attribs)
 		-- Dont process head element normally
 		style.dontprocess = true
-		end,
+	end,
 	closed 		= function() end ,
 }
 

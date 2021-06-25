@@ -109,11 +109,29 @@ local function renderbutton( g, v )
 	local text 		= v.text
 	local style 	= v.style
 	local ele = getelement( v.eid )
-	-- local button = g.gcairo:Button("", ele.pos.left, ele.pos.top, ele.width, ele.height, 3, 0 )
 	rapi.set_cursor_pos(ele.pos.left, ele.pos.top)
 	if rapi.button(v.text or "", ele.width, ele.height ) then
 		-- self.counter = self.counter + 1
 	end
+end 
+
+----------------------------------------------------------------------------------
+
+local function renderinputtext( g, v )
+
+	local text 		= v.text
+	local style 	= v.style
+	local ele = getelement( v.eid )
+
+	rapi.set_cursor_pos(ele.pos.left, ele.pos.top)
+--	g.ctx.ctx.setstyle(style)
+--	rapi.set_window_font_scale(style.textsize/g.ctx.ctx.fontsize)
+	local changed, value = rapi.input_text(v.text or "" )
+	if(changed) then 
+		-- self.counter = self.counter + 1
+		v.text = value
+	end
+--	g.ctx.ctx.unsetstyle()
 end 
 
 ----------------------------------------------------------------------------------
@@ -163,6 +181,9 @@ local function dolayout( )
 	for k, v in ipairs( render ) do 
 
 		local g = { ctx = v.ctx, cursor=v.cursor, frame = v.frame }
+		if( v.etype == "inputtext" ) then 
+			renderinputtext(g, v)
+		end 
 		if( v.etype == "button" ) then 
 			renderbutton(g, v)
 		end 
@@ -283,7 +304,7 @@ end
 
 ----------------------------------------------------------------------------------
 -- Button objects when created are empty and only margin sized.
-local function addbuttonobject( g, style )
+local function addbuttonobject( g, style, attribs )
 
 	local stylecopy = deepcopy(style)
 	
@@ -291,21 +312,55 @@ local function addbuttonobject( g, style )
 	--    like border, background, size, margin etc
 	local renderobj = { 
 		ctx 	= g, 
-		etype 	= style.etype,
+		etype 	= "button",
 		eid 	= style.elementid,
 		style 	= stylecopy, 
 		cursor 	= { top = g.cursor.top, left = g.cursor.left },
 		frame  	= { top = g.frame.top, left = g.frame.left },
 	}
+
+	-- Input buttons already have text if set in value 
+	if( style.etype == "input" and attribs.value ) then 
+		renderobj.text = attribs.value
+	end
 	
 	local pid = getparent(style)
 	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
-		
+	
 	-- Render obejcts are queued in order of the output data with the correct styles
 	tinsert(render, renderobj)
 end 
 
+
+----------------------------------------------------------------------------------
+-- Input text objects when created are a minimum size and filled during render
+local function addinputtextobject( g, style, attribs )
+
+	local stylecopy = deepcopy(style)
+
+	-- Try to treat _all_ output as text + style. Style here means a css objects type
+	--    like border, background, size, margin etc
+	local renderobj = { 
+		ctx 	= g, 
+		etype 	= "inputtext",
+		eid 	= style.elementid,
+		style 	= stylecopy, 
+		cursor 	= { top = g.cursor.top, left = g.cursor.left },
+		frame  	= { top = g.frame.top, left = g.frame.left },
+		value 	= attribs.value,
+		id 		= attribs.id,
+		name 	= attribs.name,
+		text 	= attribs.value,
+	}
+
+	local pid = getparent(style)
+	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
+	geom.update( renderobj.gid )
+
+	-- Render obejcts are queued in order of the output data with the correct styles
+	tinsert(render, renderobj)
+end 
 
 ----------------------------------------------------------------------------------
 
@@ -352,6 +407,7 @@ return {
 	
 	addtextobject 	= addtextobject,
 	addbuttonobject	= addbuttonobject,
+	addinputtextobject = addinputtextobject,
 	addimageobject	= addimageobject,
 	
 	addlayout 		= addlayout,

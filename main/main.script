@@ -58,7 +58,8 @@ function init(self)
 	msg.post(".", "acquire_input_focus")
 	self.buttons = { 0,0,0 }
 		
-	local filename = "/data/html/sample01.html"
+	-- local filename = "/data/html/sample01.html"
+	local filename = "/data/html/sample02-forms.html"
 	local xml = sys.load_resource(filename)
 	self.xmldoc = xmlp.parse(xml)
 	-- xmlp.dumpxml(self.xmldoc)

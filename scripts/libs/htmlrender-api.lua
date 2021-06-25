@@ -51,7 +51,8 @@ render_api.setup = function(self)
 	imgui.set_style_color(imgui.ImGuiCol_WindowBg, 1.00, 1.00, 1.00, 1.00)
 	imgui.set_style_color(imgui.ImGuiCol_Text, 0.0, 0.0, 0.0, 1.00)
 	imgui.set_style_color(imgui.ImGuiCol_TextDisabled, 0.60, 0.60, 0.60, 1.00)
-	imgui.set_style_color(imgui.ImGuiCol_FrameBg, 1.00, 1.00, 1.00, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_FrameBg, 0.93, 0.93, 0.96, 1.00)
+
 end 
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -129,6 +130,16 @@ render_api.button = function( text, w, h )
 
 	imgui.button( text, w, h ) 
 end
+
+-----------------------------------------------------------------------------------------------------------------------------------
+--  Render input text field
+render_api.input_text = function( text )
+
+	-- No labels by default
+	local changed, value = imgui.input_text( "Label:", text ) 
+	return changed, value
+end
+
 
 -----------------------------------------------------------------------------------------------------------------------------------
 --  load images using the specified interface
