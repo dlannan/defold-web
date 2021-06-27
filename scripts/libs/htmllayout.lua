@@ -273,8 +273,8 @@ local function addelement( g, style, attribs )
 
 	if(attribs) then 
 		element.attr = deepcopy(attribs) 
-		if(attribs.width and attribs.width > element.width) then element.width = attribs.width end
-		if(attribs.height and attribs.height > element.height) then element.height = attribs.height end
+		if(attribs.width and tonumber(attribs.width) > element.width) then element.width = tonumber(attribs.width) end
+		if(attribs.height and tonumber(attribs.height) > element.height) then element.height = tonumber(attribs.height) end
 	end 
 
 	local pid = getparent(style)
