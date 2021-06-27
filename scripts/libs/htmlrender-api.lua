@@ -133,11 +133,11 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 --  Render input text field
-render_api.input_text = function( text )
+render_api.input_text = function( text, label )
 
 	-- No labels by default
-	local changed, value = imgui.input_text( "Label:", text ) 
-	return changed, value
+	label = label or ""
+	return imgui.input_text( label, text ) 
 end
 
 

@@ -15,7 +15,7 @@ local FONT_SIZES 	= htmle.FONT_SIZES
 ----------------------------------------------------------------------------------
 
 local cursor = { top = 0.0, left = 0.0 }
-local frame = { top = 0.0, left = 0.0, width = 0.0, height = 0.0 }
+local frame = { focussed = nil, top = 0.0, left = 0.0, width = 0.0, height = 0.0 }
 
 ----------------------------------------------------------------------------------
 
@@ -92,6 +92,8 @@ local function xmlhandler( ctx, xml )
 	end
 end 
 
+local start = false 
+
 ----------------------------------------------------------------------------------
 local function renderxml( ctx, xmldoc, position )
 
@@ -101,8 +103,11 @@ local function renderxml( ctx, xmldoc, position )
 	cursor.left 	= frame.left
 	cursor.element_top = nil
 
-	htmle.init(frame, cursor)
-	xmlhandler( ctx, xmldoc )
+	if(htmle.dirty) then
+		htmle.init(frame, cursor)
+		xmlhandler( ctx, xmldoc )
+		htmle.dirty = nil
+	end 
 	htmle.finish()
 end
 

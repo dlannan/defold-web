@@ -42,6 +42,8 @@ local TEXT_CONST = {
 ----------------------------------------------------------------------------------
 
 local htmlelements = {}
+local dirty_elements 	= true
+
 local layout = require("scripts.libs.htmllayout")
 
 local function defaultmargin( style ) 
@@ -198,6 +200,35 @@ local function elementclose( g, style )
 end 
 
 ----------------------------------------------------------------------------------
+local function elementbutton( g, style, attribs )
+
+	-- Need to add check for css style
+	style_setmargins(style, 0, 0, 0, 0)
+	style_setpadding(style, 8, 0, 8, 0)
+	style_setborders(style, 17, 5, 17, 5)
+
+	-- A button is inserted as an "empty" div which is expanded as elements are added.
+	elementopen(g, style, attribs)
+	layout.addbuttonobject( g, style, attribs )
+end
+
+----------------------------------------------------------------------------------
+local function elementbuttonclose( g, style )
+	
+	-- Push the size of the element into the button object
+	local element 		= layout.getelement(style.elementid)
+	local geom 			= layout.getgeom()
+	local obj 			= geom.get( element.gid )
+
+	element.width 		= obj.width
+	element.height 		= obj.height
+
+	geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
+
+	if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
+end 
+
+----------------------------------------------------------------------------------
 -- 
 local function textdefault( g, style, attribs, text )
 
@@ -326,9 +357,8 @@ htmlelements["br"]  = {
 	opened 		= function( g, style, attribs )
 		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
 		style.pstyle.linesize = getlineheight(style)
-		defaultclose(g, style)
 	end,
-	closed 		= nil,
+	closed 		= defaultclose,
 }
 
 ----------------------------------------------------------------------------------
@@ -367,8 +397,6 @@ htmlelements["img"]  = {
 	closed 		= function( g, style )	
 		-- Push the size of the element into the button object
 		local element 		= layout.getelement(style.elementid)
-		--layout.updateelement( style.elementid, element )
-
 		local geom = layout.getgeom()
 		geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
 
@@ -384,30 +412,8 @@ htmlelements["img"]  = {
 ----------------------------------------------------------------------------------
 
 htmlelements["button"] = {
-	opened 		= function( g, style, attribs )
-
-		style_setmargins(style, 0, 0, 0, 0)
-		style_setpadding(style, 8, 0, 8, 0)
-		style_setborders(style, 17, 5, 17, 5)
-		
-		-- A button is inserted as an "empty" div which is expanded as elements are added.
-		elementopen(g, style, attribs)
-		layout.addbuttonobject( g, style )
-	end,
-	closed 		= function( g, style )
-
-		-- Push the size of the element into the button object
-		local element 		= layout.getelement(style.elementid)
-		local geom 			= layout.getgeom()
-		local obj 			= geom.get( element.gid )
-		
-		element.width 		= obj.width
-		element.height 		= obj.height
-
-		geom.renew( element.gid, element.pos.left, element.pos.top, element.width, element.height )
-
-		if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
-	end,
+	opened 		= elementbutton,
+	closed 		= elementbuttonclose,
 }
 
 ----------------------------------------------------------------------------------
@@ -423,40 +429,48 @@ htmlelements["form"] = {
 ----------------------------------------------------------------------------------
 
 htmlelements["label"] = {
-	opened 		= elementopen,
-	closed 		= function() end ,
+	opened 		= function( g, style, attribs )
+		style.margin 		= getmargin(style, TEXT_CONST.NONE, 0)
+		style.pstyle.linesize = getlineheight(style)
+		elementopen(g, style, attribs)
+	end,
+	closed 		= elementclose,
 }
 
 ----------------------------------------------------------------------------------
 
 htmlelements["input"] = {
 	opened 		= function (g, style, attribs) 
-		style_setmargins(style, 0, 0, 0, 0)
-		style_setpadding(style, 8, 0, 8, 0)
-		style_setborders(style, 1, 1, 1, 1)
 
+		local atype = attribs.type:lower()
 		style.textsize 		= FONT_SIZES.p
-		
+		style.linesize 		= getlineheight(style)
+
 		-- Get the correct text size for the button
 		local w, h = gettextsize(g, style, attribs.value or "") 
-		if(attribs.type == "text") then 
-			style.width = 160.0
-			style.height = h + style.margin.top + style.margin.bottom
-		end
-		style.linesize 		= style.height
-				
-		-- A button is inserted as an "empty" div which is expanded as elements are added.		
-		local element = elementopen(g, style, attribs)
-		if(attribs.type == "button" or attribs.type == "submit") then 
-			layout.addbuttonobject( g, style, attribs )
-		end
-		if(attribs.type == "text") then 
-			layout.addinputtextobject( g, style, attribs )
-		end
+	
+		if(atype == "button" or atype == "submit") then 
+			style.width = style.width + 16
+			style.height = style.height + 8
+			elementbutton(g, style, attribs)
+		else 
+		
+			style_setmargins(style, 0, 0, 0, 0)
+			style_setpadding(style, 8, 4, 8, 4)
+			style_setborders(style, 1, 1, 1, 1)
 
-		if(element.height > style.pstyle.linesize) then style.pstyle.linesize  = element.height end
+			style.height = h * g.ctx.fontsize + style.padding.top + style.padding.bottom
+			style.width = 8.0 * g.ctx.fontsize
+			
+			-- A button is inserted as an "empty" div which is expanded as elements are added.		
+			local element = elementopen(g, style, attribs)
+			if(atype == "text") then 
+				layout.addinputtextobject( g, style, attribs )
+			end
+		end
 	end, 
-	closed 		= nil,
+	
+	closed 		= elementbuttonclose,
 }
 
 ----------------------------------------------------------------------------------
@@ -497,6 +511,9 @@ return {
 	elements 		= htmlelements, 
 	init			= layout.init,
 	finish			= layout.finish,
+
+	-- Use this flag to update elements
+	dirty 			= dirty_elements,
 }
 
 ----------------------------------------------------------------------------------

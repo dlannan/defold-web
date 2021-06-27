@@ -276,6 +276,22 @@ static int imgui_SetKeyDown(lua_State* L)
     return 0;
 }
 
+static int imgui_SetKeyPressed(lua_State *L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+    ImGuiIO& io = ImGui::GetIO();
+    const char * key = luaL_checkstring(L, 1);
+    io.AddInputCharacter(key[0]);
+    return 0;
+}    
+
+static int imgui_SetKeyboardFocus(lua_State *L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+    int focus_id = luaL_checknumber(L, 1);
+    ImGui::SetKeyboardFocusHere(focus_id);
+    return 0;
+}
 
 // ----------------------------
 // ----- KEY MODIFIERS --------
@@ -1471,11 +1487,13 @@ static const luaL_reg Module_methods[] =
 
     {"set_mouse_input", imgui_SetMouseInput},
     {"set_key_down", imgui_SetKeyDown},
+    {"set_key_pressed", imgui_SetKeyPressed},
     {"set_key_modifier_ctrl", imgui_SetKeyModifierCtrl},
     {"set_key_modifier_shift", imgui_SetKeyModifierShift},
     {"set_key_modifier_alt", imgui_SetKeyModifierAlt},
     {"set_key_modifier_super", imgui_SetKeyModifierSuper},
     {"add_input_character", imgui_AddInputCharacter},
+    {"set_keyboard_focus", imgui_SetKeyboardFocus},
 
     {"is_item_clicked", imgui_IsItemClicked},
     {"is_item_hovered", imgui_IsItemHovered},

@@ -27,6 +27,12 @@ local tcolor = { r=0.0, b=0.0, g=0.0, a=1.0 }
 
 ----------------------------------------------------------------------------------
 
+local child_flags = imgui.WINDOWFLAGS_NOTITLEBAR
+child_flags = bit.bor(child_flags, imgui.WINDOWFLAGS_NOMOVE)
+child_flags = bit.bor(child_flags, imgui.WINDOWFLAGS_NORESIZE)
+
+----------------------------------------------------------------------------------
+
 function table_print(tt, indent, done)
 	done = done or {}
 	indent = indent or 0
@@ -110,9 +116,14 @@ local function renderbutton( g, v )
 	local style 	= v.style
 	local ele = getelement( v.eid )
 	rapi.set_cursor_pos(ele.pos.left, ele.pos.top)
-	if rapi.button(v.text or "", ele.width, ele.height ) then
+	imgui.begin_child(tostring(v.eid), ele.width, ele.height)
+	g.ctx.ctx.setstyle(style)
+	local changed, pressed = rapi.button(v.text or "", ele.width, ele.height )
+	if changed then 
 		-- self.counter = self.counter + 1
 	end
+	g.ctx.ctx.unsetstyle()
+	imgui.end_child()
 end 
 
 ----------------------------------------------------------------------------------
@@ -124,14 +135,15 @@ local function renderinputtext( g, v )
 	local ele = getelement( v.eid )
 
 	rapi.set_cursor_pos(ele.pos.left, ele.pos.top)
---	g.ctx.ctx.setstyle(style)
---	rapi.set_window_font_scale(style.textsize/g.ctx.ctx.fontsize)
-	local changed, value = rapi.input_text(v.text or "" )
+	imgui.begin_child(tostring(v.eid), ele.width, ele.height)
+	g.ctx.ctx.setstyle(style)
+	local changed, value = rapi.input_text( ele.attr.value or "", "Label" )
 	if(changed) then 
-		-- self.counter = self.counter + 1
-		v.text = value
+		print(changed, value)
+		ele.attr.value = value
 	end
---	g.ctx.ctx.unsetstyle()
+	g.ctx.ctx.unsetstyle()
+	imgui.end_child()
 end 
 
 ----------------------------------------------------------------------------------
@@ -178,6 +190,12 @@ end
 
 local function dolayout( )
 
+end
+
+----------------------------------------------------------------------------------
+
+local function doraster( )
+
 	for k, v in ipairs( render ) do 
 
 		local g = { ctx = v.ctx, cursor=v.cursor, frame = v.frame }
@@ -206,7 +224,7 @@ local function dolayout( )
 				renderelement( g, v)
 			end 
 		end 
-		
+
 		local ele = elements[1]
 		local html = geom.geometries[1]
 		local g = { ctx = ele.ctx, cursor=ele.cursor, frame = ele.frame }
@@ -215,12 +233,6 @@ local function dolayout( )
 		end
 	end
 	-- geom.dump()
-end
-
-----------------------------------------------------------------------------------
-
-local function doraster( )
-
 end
 
 ----------------------------------------------------------------------------------
@@ -248,8 +260,6 @@ end
 -- Try to replicate css properties here. 
 local function addelement( g, style, attribs )
 
-	attribs = attribs or { width = style.width, height = style.height }
-	
 	local element = {}
 	element.ctx 		= g
 	element.etype 		= style.etype
@@ -257,9 +267,15 @@ local function addelement( g, style, attribs )
 	element.background 	= { color = style.background or "#aaaaaa" }
 	element.margin 		= { top = style.margin.top or 0, bottom = style.margin.bottom or 0, left = style.margin.left or 0, right = style.margin.right or 0 }
 	element.pos 		= { top = g.cursor.top, left = g.cursor.left }
-	element.width 		= tonumber(attribs.width or style.width or 0)
-	element.height 		= tonumber(attribs.height or style.height or 0)
+	element.width 		= tonumber(style.width or 0)
+	element.height 		= tonumber(style.height or 0)
 	element.id 			= #elements + 1
+
+	if(attribs) then 
+		element.attr = deepcopy(attribs) 
+		if(attribs.width and attribs.width > element.width) then element.width = attribs.width end
+		if(attribs.height and attribs.height > element.height) then element.height = attribs.height end
+	end 
 
 	local pid = getparent(style)
 	element.gid 		= geom.add( style.etype, pid, 
@@ -348,14 +364,10 @@ local function addinputtextobject( g, style, attribs )
 		style 	= stylecopy, 
 		cursor 	= { top = g.cursor.top, left = g.cursor.left },
 		frame  	= { top = g.frame.top, left = g.frame.left },
-		value 	= attribs.value,
-		id 		= attribs.id,
-		name 	= attribs.name,
-		text 	= attribs.value,
 	}
-
+	
 	local pid = getparent(style)
-	renderobj.gid 		= geom.add( style.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
+	renderobj.gid 		= geom.add( renderobj.etype, pid, g.cursor.left, g.cursor.top, style.width, style.height )
 	geom.update( renderobj.gid )
 
 	-- Render obejcts are queued in order of the output data with the correct styles
