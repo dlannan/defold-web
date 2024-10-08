@@ -1280,14 +1280,14 @@ static int imgui_FontScale(lua_State *L)
 // ----------------------------
 // ----- DRAW -----------------
 // ----------------------------
-static dmExtension::Result imgui_Draw(dmExtension::Params* params)
+static ExtensionResult imgui_Draw(dmExtension::Params* params)
 {
     imgui_NewFrame();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     g_imgui_NewFrame = false;
-    return dmExtension::RESULT_OK;
+    return ExtensionResult::EXTENSION_RESULT_OK;
 }
 
 static int imgui_DrawLine(lua_State* L)
