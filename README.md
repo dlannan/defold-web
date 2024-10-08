@@ -7,7 +7,7 @@ Note: This is for applications only (at the moment).
 This is a new type of web engine. A very simplistic one that will support a number of html5 features.
 Primary layout, elements creation and rendering are done in lua. The rendering system is decoupled, so this could be used in almost any luajit based system.
 
-![alt Sample Early Screenshot](http://github.com/dlannan/defold-web/screenshots/defold-web.png)
+![alt Sample Early Screenshot](https://github.com/dlannan/defold-web/screenshots/defold-web.png)
 
 ## Imgui
 The system currently utilises imgui for rendering. 
