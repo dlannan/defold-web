@@ -59,7 +59,7 @@ function init(self)
 
 	imgui.set_ini_filename()
 	
-	local filename = "/data/html/sample01.html"
+	local filename = "/data/html/sample02-forms.html"
 	--local filename = "/data/html/sample02-forms.html"
 	local xml = sys.load_resource(filename)
 	self.xmldoc = xmlp.parse(xml)
